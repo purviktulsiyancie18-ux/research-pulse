@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/client";
 import { TIPS } from "@/lib/glossary";
-import { InfoTip } from "./InfoTip";
 
 export function BriefActions(props: { briefId: string; status: string; emailedAt: string | null; markdown: string }) {
   const router = useRouter();
@@ -88,16 +87,14 @@ export function BriefActions(props: { briefId: string; status: string; emailedAt
         )}
       </div>
       {props.emailedAt ? (
-        <span className="inline-flex items-center rounded bg-brand-soft px-2 py-0.5 text-xs text-brand">
+        <span className="cursor-help rounded bg-brand-soft px-2 py-0.5 text-xs text-brand" title={`Counted as delivered. ${TIPS.delivered}`}>
           ✓ Emailed{" "}
           {new Date(props.emailedAt).toLocaleString("en-GB", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-          <InfoTip text={`Counted as delivered. ${TIPS.delivered}`} align="right" />
         </span>
       ) : (
         props.status === "delivered" && (
-          <span className="inline-flex items-center rounded bg-brand-soft px-2 py-0.5 text-xs text-brand">
+          <span className="cursor-help rounded bg-brand-soft px-2 py-0.5 text-xs text-brand" title={`Not emailed, but counted as sent. ${TIPS.delivered}`}>
             ✓ Marked as delivered
-            <InfoTip text={`Not emailed, but counted as sent. ${TIPS.delivered}`} align="right" />
           </span>
         )
       )}

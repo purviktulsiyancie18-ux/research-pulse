@@ -53,8 +53,7 @@ export function SettingsClient(props: { domains: Domain[]; settings: Settings; c
           <div>
             <h2 className="text-lg font-semibold">Domains</h2>
             <p className="text-sm text-muted">
-              Research topics scanned every run. Changes apply from the next run.
-              <InfoTip text="Switch on = scanned every week. Switch off (grey) = paused and skipped. No code changes are needed." align="left" />
+              Research topics scanned every week. Switch one off to pause it.
             </p>
           </div>
           <button className="btn btn-primary" onClick={() => setEditing({ ...EMPTY })}>
@@ -177,16 +176,19 @@ function DomainModal(props: { draft: DomainDraft; categories: string[]; onClose:
           <div>
             <label className="label">
             What counts as relevant
-            <InfoTip text="One sentence describing this topic. Gemini AI reads it to judge whether each paper fits." align="left" />
           </label>
-            <input className="input" value={d.description} onChange={(e) => set("description", e.target.value)} />
+            <input
+              className="input"
+              value={d.description}
+              onChange={(e) => set("description", e.target.value)}
+              placeholder="One sentence — the AI uses this to judge which papers fit"
+            />
           </div>
           <div>
             <label className="label">
             Keywords
-            <InfoTip text="Words searched in each paper’s title and abstract (its short summary). A paper matching any one keyword is picked up. Press Enter after each." align="left" />
           </label>
-            <TagInput value={d.keywords} onChange={(v) => set("keywords", v)} placeholder="Type and press Enter" />
+            <TagInput value={d.keywords} onChange={(v) => set("keywords", v)} placeholder="Type a word or phrase, press Enter" />
           </div>
           <div>
             <label className="label">
@@ -213,7 +215,6 @@ function DomainModal(props: { draft: DomainDraft; categories: string[]; onClose:
           <div>
             <label className="label">
             Exclude papers containing
-            <InfoTip text="Papers whose title or abstract contains any of these words are thrown out." align="left" />
           </label>
             <TagInput value={d.exclude_keywords} onChange={(v) => set("exclude_keywords", v)} placeholder="e.g. medical" />
           </div>
@@ -221,18 +222,16 @@ function DomainModal(props: { draft: DomainDraft; categories: string[]; onClose:
             <div>
               <label className="label">
             Priority
-            <InfoTip text="High = shown first and gets 1 extra paper slot. Low = gets 1 fewer slot." align="left" />
           </label>
               <select className="input" value={d.priority} onChange={(e) => set("priority", e.target.value as Domain["priority"])}>
-                <option value="high">High</option>
+                <option value="high">High — shown first, +1 paper</option>
                 <option value="normal">Normal</option>
-                <option value="low">Low</option>
+                <option value="low">Low — 1 fewer paper</option>
               </select>
             </div>
             <div>
               <label className="label">
             Papers per domain
-            <InfoTip text="Maximum papers shown for this topic. “Use global setting” follows Brief preferences below." align="left" />
           </label>
               <select
                 className="input"
@@ -255,8 +254,7 @@ function DomainModal(props: { draft: DomainDraft; categories: string[]; onClose:
           <div className="rounded-lg bg-background p-3">
             <div className="flex items-center justify-between">
               <span className="text-sm">
-                Test on the last 7 days of arXiv
-                <InfoTip text="Counts how many recent papers your keywords match, without using AI. Over 150 = too broad, 0 = too narrow." align="left" />
+                Test on the last 7 days of arXiv — no AI used
               </span>
               <button type="button" className="btn py-1 text-xs" onClick={runPreview} disabled={!d.keywords.length && !d.categories.length}>
                 Preview query
@@ -342,14 +340,12 @@ function GlobalSettings({ settings, defaultRecipient }: { settings: Settings; de
               }}
             />
             Pause Monday delivery
-            <InfoTip text="Vacation mode: no Monday email. When you un-pause, the next brief covers everything since the last one sent." align="right" />
           </label>
         </div>
 
         <div>
           <label className="label">
             Recipient email
-            <InfoTip text="Who receives the brief. While sending from onboarding@resend.dev, only your Resend account email can receive." align="left" />
           </label>
           <input
             className="input"
@@ -362,7 +358,6 @@ function GlobalSettings({ settings, defaultRecipient }: { settings: Settings; de
         <div>
           <label className="label">
             Papers per domain
-            <InfoTip text="Maximum papers per topic, 1–8. A topic can override this." align="left" />
           </label>
           <input className="input" type="number" min={1} max={8} value={s.papers_per_domain} onChange={(e) => set("papers_per_domain", Number(e.target.value))} />
         </div>
@@ -395,7 +390,6 @@ function GlobalSettings({ settings, defaultRecipient }: { settings: Settings; de
         <div>
           <label className="label">
             Reading time cap
-            <InfoTip text="Maximum brief length. If longer, the weakest papers are dropped, but every topic keeps at least one." align="left" />
           </label>
           <select className="input" value={s.reading_minutes} onChange={(e) => set("reading_minutes", Number(e.target.value))}>
             <option value={5}>5 minutes</option>
@@ -405,59 +399,50 @@ function GlobalSettings({ settings, defaultRecipient }: { settings: Settings; de
         <div>
           <label className="label">
             Detail level
-            <InfoTip text="Short = one-line summary. Standard = normal. Detailed = also adds method and limitations." align="left" />
           </label>
           <select className="input" value={s.detail_level} onChange={(e) => set("detail_level", e.target.value as Settings["detail_level"])}>
-            <option value="short">Short</option>
+            <option value="short">Short — one-line summary</option>
             <option value="standard">Standard</option>
-            <option value="detailed">Detailed</option>
+            <option value="detailed">Detailed — adds method &amp; limitations</option>
           </select>
         </div>
         <div>
           <label className="label">
-            Lookback days
-            <InfoTip text="How many days back the “Last N days” refresh and the very first brief look." align="left" />
+            Days to look back
           </label>
           <input className="input" type="number" min={1} max={31} value={s.lookback_days} onChange={(e) => set("lookback_days", Number(e.target.value))} />
         </div>
         <div>
           <label className="label">
             Client lens
-            <InfoTip text="Optional industry, e.g. banking. The “Client angle” on each paper is then written for that industry." align="left" />
           </label>
           <input
             className="input"
             value={s.client_lens ?? ""}
-            placeholder="e.g. banking, manufacturing"
+            placeholder="e.g. banking — tailors the client angle"
             onChange={(e) => set("client_lens", e.target.value || null)}
           />
         </div>
+        <div className="sm:col-span-2 -mb-2">
+          <p className="text-sm font-semibold">
+            Watch-list
+            <InfoTip text="Papers that mention any author, lab or term listed here get a +1.5 score boost." align="left" />
+          </p>
+        </div>
         <div className="sm:col-span-2">
-          <label className="label">
-            Watch-list: authors
-            <InfoTip text="Researchers you follow. Their papers get a +1.5 score boost." align="left" />
-          </label>
+          <label className="label">Authors</label>
           <TagInput value={s.watchlist_authors} onChange={(v) => set("watchlist_authors", v)} placeholder="e.g. Yann LeCun" />
         </div>
         <div className="sm:col-span-2">
-          <label className="label">
-            Watch-list: labs / orgs
-            <InfoTip text="Organisations you follow, e.g. Google DeepMind. Their papers get a +1.5 boost." align="left" />
-          </label>
+          <label className="label">Labs / organisations</label>
           <TagInput value={s.watchlist_orgs} onChange={(v) => set("watchlist_orgs", v)} placeholder="e.g. Google DeepMind" />
         </div>
         <div className="sm:col-span-2">
-          <label className="label">
-            Watch-list: benchmarks / terms
-            <InfoTip text="Words to watch for, e.g. SWE-bench (a standard AI coding test). Matching papers get a +1.5 boost." align="left" />
-          </label>
+          <label className="label">Benchmarks / terms</label>
           <TagInput value={s.watchlist_terms} onChange={(v) => set("watchlist_terms", v)} placeholder="e.g. SWE-bench" />
         </div>
         <div>
-          <span className="label">
-            Signal sources
-            <InfoTip text="Extra data used in scoring. arXiv supplies the papers and is always on." align="left" />
-          </span>
+          <span className="label">Signal sources</span>
           <label className="flex items-center gap-2 text-sm text-muted">
             <input type="checkbox" checked disabled /> arXiv
           </label>
@@ -467,20 +452,17 @@ function GlobalSettings({ settings, defaultRecipient }: { settings: Settings; de
               checked={s.sources.semantic_scholar}
               onChange={(e) => set("sources", { ...s.sources, semantic_scholar: e.target.checked })}
             />
-            Semantic Scholar
-            <InfoTip text="Free research database. Gives author h-index (how often their work is cited) and a one-line summary." align="left" />
+            Semantic Scholar <span className="text-muted">— author seniority</span>
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={s.sources.huggingface} onChange={(e) => set("sources", { ...s.sources, huggingface: e.target.checked })} />
-            Hugging Face
-            <InfoTip text="Large AI community site. Gives upvotes — how many members liked the paper." align="left" />
+            Hugging Face <span className="text-muted">— community likes</span>
           </label>
         </div>
         <div className="grid gap-3">
           <div>
             <label className="label">
-            Manual refresh cooldown (minutes)
-            <InfoTip text="Minutes to wait between Refreshes. Protects the free AI quota." align="left" />
+            Refresh cooldown (minutes)
           </label>
             <input
               className="input"
@@ -498,7 +480,6 @@ function GlobalSettings({ settings, defaultRecipient }: { settings: Settings; de
               onChange={(e) => set("email_manual_refresh_default", e.target.checked)}
             />
             Email manual refreshes by default
-            <InfoTip text="Pre-ticks “Email this brief when ready” in the Refresh panel." align="left" />
           </label>
         </div>
         <div className="sm:col-span-2 flex items-center gap-3">

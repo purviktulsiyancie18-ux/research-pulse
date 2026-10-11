@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { api } from "@/lib/client";
-import { TIPS } from "@/lib/glossary";
-import { InfoTip } from "./InfoTip";
 
 type Verdict = "read" | "client" | "not_useful" | null;
 
@@ -74,7 +72,6 @@ export function FeedbackControls(props: {
         <button type="button" onClick={() => setOpen(!open)} className="px-1.5 text-xs text-muted underline-offset-2 hover:underline">
           {open ? "Hide note" : "Add note"}
         </button>
-        <InfoTip text={TIPS.feedback} />
         {status && <span className="text-xs text-muted">{status}</span>}
       </div>
       {open && (

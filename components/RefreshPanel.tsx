@@ -148,10 +148,7 @@ export function RefreshPanel(props: {
             )}
           </div>
           <div>
-            <span className="label">
-              Domains
-              <InfoTip text="The research topics to scan. Dark green = included, white = skipped. “Paused” topics are switched off in Settings but can still be included here." align="left" />
-            </span>
+            <span className="label">Domains</span>
             <div className="flex flex-wrap gap-1.5">
               {props.domains.map((d) => {
                 const on = selected.includes(d.id);
@@ -171,7 +168,6 @@ export function RefreshPanel(props: {
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} />
             Email this brief when ready
-            <InfoTip text="If unticked, the brief is a preview shown here only. You can still email it later from the brief page." align="left" />
           </label>
           <div className="flex items-center gap-2">
             <button

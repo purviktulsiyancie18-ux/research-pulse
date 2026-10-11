@@ -3,7 +3,6 @@ import { briefToMarkdown, fmtDate, statsLine, type BriefView as View } from "@/l
 import { appUrl } from "@/lib/email";
 import { TIPS } from "@/lib/glossary";
 import { BriefActions } from "./BriefActions";
-import { InfoTip } from "./InfoTip";
 import { PaperCard } from "./PaperCard";
 
 export function BriefView({ view, showTitleLink = false }: { view: View; showTitleLink?: boolean }) {
@@ -21,13 +20,13 @@ export function BriefView({ view, showTitleLink = false }: { view: View; showTit
         <div>
           <div className="flex items-center gap-2">
             <span
-              className={`rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wider ${
+              title={view.status === "delivered" ? TIPS.delivered : TIPS.preview}
+              className={`cursor-help rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wider ${
                 view.status === "delivered" ? "bg-brand text-white" : "bg-amber-100 text-amber-800"
               }`}
             >
               {view.status === "delivered" ? "DELIVERED" : "PREVIEW"}
             </span>
-            <InfoTip text={view.status === "delivered" ? TIPS.delivered : TIPS.preview} align="left" />
             <span className="text-xs text-muted">Last updated {lastUpdated} IST</span>
           </div>
           <h1 className="mt-1 text-2xl font-bold tracking-tight">
@@ -53,10 +52,7 @@ export function BriefView({ view, showTitleLink = false }: { view: View; showTit
 
       {view.headline && (
         <div className="mt-4 rounded-r-lg border-l-4 border-brand bg-surface px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-            Headline of the week
-            <InfoTip text={TIPS.headline} align="left" />
-          </p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Headline of the week</p>
           <p className="mt-1 text-[15px] leading-relaxed">{view.headline}</p>
         </div>
       )}

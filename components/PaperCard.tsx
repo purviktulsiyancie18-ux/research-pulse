@@ -9,14 +9,11 @@ const VERDICT_STYLE: Record<string, string> = {
   FYI: "bg-gray-200 text-gray-700",
 };
 
-function Field({ label, tip, children }: { label: string; tip?: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   if (!children) return null;
   return (
     <p className="mt-1.5 text-[15px] leading-relaxed">
-      <span className="font-semibold text-foreground">
-        {label}
-        {tip && <InfoTip text={tip} align="left" />}:{" "}
-      </span>
+      <span className="font-semibold text-foreground">{label}: </span>
       <span className="text-[#2b352f]">{children}</span>
     </p>
   );
@@ -27,27 +24,29 @@ export function PaperCard({ card, briefId, feedback = true }: { card: Card; brie
     <article className="card p-4 sm:p-5">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
         {card.verdict ? (
-          <span className="inline-flex items-center">
-            <span className={`rounded px-1.5 py-0.5 text-[11px] font-bold tracking-wide ${VERDICT_STYLE[card.verdict]}`}>{card.verdict}</span>
-            <InfoTip text={`${card.verdict}: ${VERDICT_LABELS[card.verdict]}. This is the AI's advice and does not change the score.`} align="left" />
+          <span
+            title={`${VERDICT_LABELS[card.verdict]} (AI's advice)`}
+            className={`cursor-help rounded px-1.5 py-0.5 text-[11px] font-bold tracking-wide ${VERDICT_STYLE[card.verdict]}`}
+          >
+            {card.verdict}
           </span>
         ) : (
-          <span className="inline-flex items-center">
-            <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-800">AI summary unavailable</span>
-            <InfoTip text="Gemini AI did not respond, so the paper's own summary is shown and it is ranked on the other signals." align="left" />
+          <span
+            title="Gemini AI did not respond, so the paper's own summary is shown."
+            className="cursor-help rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-800"
+          >
+            AI summary unavailable
           </span>
         )}
-        <span className="inline-flex items-center text-foreground">
+        <span className="cursor-help text-foreground" title={TIPS.score}>
           <span className="font-mono font-semibold">{card.score.toFixed(1)}</span>
           <span className="text-muted">/10</span>
-          <InfoTip text={TIPS.score} />
         </span>
         <span>·</span>
         <span>{fmtDate(card.publishedAt)}</span>
         {card.alsoRelevantTo.length > 0 && (
-          <span className="inline-flex items-center italic">
+          <span className="italic" title={TIPS.alsoRelevant}>
             · Also in: {card.alsoRelevantTo.join(", ")}
-            <InfoTip text={TIPS.alsoRelevant} />
           </span>
         )}
       </div>
@@ -64,12 +63,8 @@ export function PaperCard({ card, briefId, feedback = true }: { card: Card; brie
 
       <Field label="Summary">{card.summary}</Field>
       <Field label="Key finding">{card.keyFinding}</Field>
-      <Field label="Why it matters" tip="Why a strategy consultant should care about this paper.">
-        {card.whyItMatters}
-      </Field>
-      <Field label="Client angle" tip="What this means for a business client.">
-        {card.clientAngle}
-      </Field>
+      <Field label="Why it matters">{card.whyItMatters}</Field>
+      <Field label="Client angle">{card.clientAngle}</Field>
       <Field label="Method">{card.method}</Field>
       <Field label="Limitations">{card.limitations}</Field>
 
@@ -88,12 +83,9 @@ export function PaperCard({ card, briefId, feedback = true }: { card: Card; brie
       )}
 
       <div className="mt-3 flex flex-wrap items-center gap-3 text-sm font-medium">
-        <span className="inline-flex items-center">
-          <a href={card.absUrl} target="_blank" rel="noreferrer" className="text-brand hover:underline">
-            arXiv ↗
-          </a>
-          <InfoTip text={TIPS.arxiv} align="left" />
-        </span>
+        <a href={card.absUrl} target="_blank" rel="noreferrer" className="text-brand hover:underline" title={TIPS.arxiv}>
+          arXiv ↗
+        </a>
         {card.pdfUrl && (
           <a href={card.pdfUrl} target="_blank" rel="noreferrer" className="text-brand hover:underline">
             PDF ↗
