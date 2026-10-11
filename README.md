@@ -1,6 +1,6 @@
 # Research Pulse
 
-A weekly AI-research brief for Kavita, a senior consultant who advises clients on AI strategy. Every Monday before 7:00 AM IST it scans her monitored domains on arXiv, adds significance signals from Semantic Scholar and Hugging Face, has **Gemini Flash** triage and summarise the papers, ranks them, and emails a brief she can read in under 10 minutes. The same brief is on the web, where she marks each paper *Read in full*, *Bring to client* or *Not useful*. That feedback shapes the next week's ranking.
+A weekly AI-research brief for Kavita, a senior consultant who advises clients on AI strategy. Every Monday before 7:00 AM IST it scans her monitored domains on arXiv, adds significance signals from Semantic Scholar and Hugging Face, has **Gemini Flash** triage and summarise the papers, ranks them, and emails a brief she can read in under 10 minutes. The same brief is on the web, where she marks each paper *Useful* or *Not useful* and bookmarks the ones she wants to keep. That feedback shapes the next week's ranking.
 
 **Design:** light, blue-led "research newsletter" look from the Claude Design handoff — Plus Jakarta Sans + Inter, tokens in `app/globals.css`, icons from Lucide, logo in `public/rp-mark.png`.
 
@@ -41,9 +41,9 @@ Key code: [`lib/pipeline.ts`](lib/pipeline.ts) (orchestration), [`lib/ranking.ts
 | Route | What it does |
 |---|---|
 | `/` | Latest brief, Refresh panel (since last brief · last N days · custom range · selected domains · optional email), trends |
-| `/briefs/[id]` | Full brief with feedback buttons, ★, notes, client tag, Export PDF, Copy Markdown, Send email, Mark as delivered |
+| `/briefs/[id]` | Full brief with feedback (Useful · Not useful · Bookmark), notes and client tags on bookmarks, Export PDF, Copy Markdown, Send email, Mark as delivered |
 | `/briefs` | Archive. Search across titles, summaries and notes; filter by domain and verdict |
-| `/library` | Starred and "Bring to client" papers with notes and client tags (her running log) |
+| `/bookmarks` | Bookmarked papers with notes and client tags (her running log). `/library` redirects here |
 | `/runs` | Run history: status, duration, counts, Gemini calls, per-domain status, Retry |
 | `/settings` | Add, edit, pause and delete domains, with a **Preview query** test against arXiv; global preferences; pause delivery |
 
@@ -92,6 +92,15 @@ On the Hobby plan, cron schedules are fixed at deploy time and run at most once 
 { "crons": [{ "path": "/api/cron/weekly-brief", "schedule": "0 0 * * 1" }] }
 ```
 `0 0 * * 1` is Monday 00:00 UTC, so the email arrives between 5:30 and 6:29 AM IST. To change it, edit the expression (it's in UTC) and redeploy. To skip a week, use **Pause Monday delivery** in Settings. The next run then covers everything since the last delivered brief.
+
+## Feedback model
+| Control | Effect |
+|---|---|
+| **Useful** | "More like this": used as a positive example for Gemini in that topic and toward the +0.5 author boost |
+| **Not useful** | The paper never appears again, and it is used as a negative example. Removes any bookmark |
+| **Bookmark** | Saves the paper to **Bookmarks**, where it can carry a note and client tag. Also counts as Useful. Clears Not useful |
+
+The **READ / CLIENT / FYI** badges are the AI's suggestions ("Suggested: Read in full / Share with client / FYI"). They are advice only and do not change the score.
 
 ## Design decisions & simplifications
 - **Since last brief** starts at the end of the last *delivered* brief. Preview briefs from Refresh don't count until you email them or click *Mark as delivered*, so their papers can still show up on Monday.

@@ -75,7 +75,7 @@ export default async function ScoringPage() {
           </div>
           <div className="flex items-center gap-3 rounded-panel bg-teal/10 px-4 py-3">
             <span className="font-display text-[18px] font-extrabold text-teal-ink">+0.5</span>
-            <span className="text-heading">By an author whose papers you marked useful before</span>
+            <span className="text-heading">By an author whose papers you marked Useful or bookmarked before</span>
           </div>
           <p className="text-[13px] text-muted-text">The final score is capped at 10.</p>
         </div>
@@ -155,19 +155,22 @@ export default async function ScoringPage() {
         </ol>
       </Section>
 
-      <Section n={6} title="Verdict labels">
+      <Section n={6} title="AI suggestions">
         <ul className="flex flex-col gap-2.5">
           <li className="flex items-center gap-3">
             <VerdictBadge verdict="READ" /> Worth reading in full yourself
           </li>
           <li className="flex items-center gap-3">
-            <VerdictBadge verdict="CLIENT" /> Worth bringing up with a client
+            <VerdictBadge verdict="CLIENT" /> Worth sharing with a client
           </li>
           <li className="flex items-center gap-3">
             <VerdictBadge verdict="FYI" /> For your information — good to know
           </li>
         </ul>
-        <p className="mt-3 text-[13px] text-muted-text">Gemini chooses the verdict. It is advice only and does not change the score.</p>
+        <p className="mt-3 text-[13px] text-muted-text">
+          Gemini makes the suggestion. It is advice only and does not change the score. Your own feedback — Useful, Not useful and Bookmark — is what
+          teaches the ranking.
+        </p>
       </Section>
 
       <Section n={7} title="If the AI is unavailable">
@@ -186,7 +189,7 @@ export default async function ScoringPage() {
             ["bg-pink/12 text-pink-ink", "24 upvotes", "Hugging Face community likes"],
             ["bg-lime/14 text-lime-ink", "Code released", "The authors shared their code"],
             ["bg-primary-tint text-primary-pressed", "Watch-list: OpenAI", "Matched your follow list (+1.5)"],
-            ["bg-amber/14 text-amber-ink", "You found this author useful", "Based on your feedback (+0.5)"],
+            ["bg-amber/14 text-amber-ink", "You found this author useful", "You marked 2+ of their papers Useful or bookmarked them (+0.5)"],
           ].map(([cls, chip, meaning]) => (
             <div key={chip} className="panel px-4 py-3">
               <span className={`inline-block rounded-full px-2.5 py-1 text-[12px] font-medium ${cls}`}>{chip}</span>

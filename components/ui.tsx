@@ -25,9 +25,9 @@ export function DomainIcon({ id, name, size = 44, radius = 12 }: { id: number; n
 }
 
 const VERDICT: Record<string, { label: string; cls: string; Icon: LucideIcon; tip: string }> = {
-  READ: { label: "READ", cls: "bg-primary text-white", Icon: BookOpen, tip: "READ — read in full" },
-  CLIENT: { label: "CLIENT", cls: "bg-teal/14 text-teal-ink", Icon: Briefcase, tip: "CLIENT — bring to a client" },
-  FYI: { label: "FYI", cls: "bg-sky/12 text-sky-ink", Icon: Eye, tip: "FYI — for your information" },
+  READ: { label: "Suggested: Read in full", cls: "bg-primary text-white", Icon: BookOpen, tip: "The AI suggests reading this paper in full" },
+  CLIENT: { label: "Suggested: Share with client", cls: "bg-teal/14 text-teal-ink", Icon: Briefcase, tip: "The AI suggests sharing this with a client" },
+  FYI: { label: "Suggested: FYI", cls: "bg-sky/12 text-sky-ink", Icon: Eye, tip: "The AI suggests this is good to know (for your information)" },
 };
 
 export function VerdictBadge({ verdict }: { verdict: string | null }) {

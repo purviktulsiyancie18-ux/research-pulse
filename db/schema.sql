@@ -123,8 +123,8 @@ create table if not exists feedback (
   arxiv_id text references papers(arxiv_id),
   domain_id int references domains(id) on delete cascade,
   brief_id uuid references briefs(id) on delete set null,
-  verdict text check (verdict in ('read','client','not_useful')),
-  starred boolean not null default false,
+  verdict text check (verdict in ('useful','not_useful')),
+  starred boolean not null default false,       -- "Bookmarked" in the UI
   note text,
   client_tag text,
   created_at timestamptz not null default now(),
@@ -134,6 +134,12 @@ create table if not exists feedback (
 
 -- Deleting a domain archives it so past briefs keep their papers
 alter table domains add column if not exists archived boolean not null default false;
+
+-- Feedback v2: Read in full / Bring to client -> Useful; Bring to client also bookmarks (starred)
+alter table feedback drop constraint if exists feedback_verdict_check;
+update feedback set starred = true where verdict = 'client';
+update feedback set verdict = 'useful' where verdict in ('read', 'client');
+alter table feedback add constraint feedback_verdict_check check (verdict in ('useful', 'not_useful'));
 
 create index if not exists papers_published_idx on papers (published_at desc);
 create index if not exists brief_items_arxiv_idx on brief_items (arxiv_id);

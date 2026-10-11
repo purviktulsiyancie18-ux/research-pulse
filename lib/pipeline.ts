@@ -125,7 +125,7 @@ async function loadExclusions() {
 async function loadUsefulAuthors(): Promise<Set<string>> {
   const rows = await q<{ authors: { name: string }[] }>(
     `select distinct p.arxiv_id, p.authors from feedback f join papers p on p.arxiv_id = f.arxiv_id
-     where f.verdict in ('read','client')`,
+     where f.verdict = 'useful' or f.starred`,
   );
   const counts = new Map<string, number>();
   for (const r of rows) for (const a of r.authors ?? []) counts.set(a.name, (counts.get(a.name) ?? 0) + 1);
@@ -133,9 +133,10 @@ async function loadUsefulAuthors(): Promise<Set<string>> {
 }
 
 async function feedbackExamples(domainId: number) {
-  const rows = await q<{ title: string; verdict: string }>(
+  // Useful = marked Useful or bookmarked; Not useful = marked Not useful.
+  const rows = await q<{ title: string; verdict: string | null }>(
     `select p.title, f.verdict from feedback f join papers p on p.arxiv_id = f.arxiv_id
-     where f.domain_id = $1 and f.verdict is not null order by f.updated_at desc limit 6`,
+     where f.domain_id = $1 and (f.verdict is not null or f.starred) order by f.updated_at desc limit 6`,
     [domainId],
   );
   return {

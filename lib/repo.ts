@@ -63,9 +63,9 @@ export async function getDomains(opts: { activeOnly?: boolean; includeArchived?:
   return rows.map(toDomain);
 }
 
-/** Number of papers in the Library (starred or "bring to client"). */
+/** Number of bookmarked papers (the `starred` column). */
 export async function libraryCount(): Promise<number> {
-  const r = await q1<{ n: number }>("select count(*)::int as n from feedback where starred or verdict = 'client'");
+  const r = await q1<{ n: number }>("select count(*)::int as n from feedback where starred");
   return r?.n ?? 0;
 }
 

@@ -48,7 +48,8 @@ export const feedbackInput = z.object({
   arxivId: z.string().min(4).max(40),
   domainId: z.number().int().positive(),
   briefId: z.string().uuid().nullable().optional(),
-  verdict: z.enum(["read", "client", "not_useful"]).nullable().optional(),
+  verdict: z.enum(["useful", "not_useful"]).nullable().optional(),
+  /** Bookmarked (stored in the `starred` column). */
   starred: z.boolean().optional(),
   note: z.string().max(2000).nullable().optional(),
   clientTag: z.string().max(80).nullable().optional(),

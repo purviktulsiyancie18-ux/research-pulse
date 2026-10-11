@@ -31,10 +31,11 @@ export const CATEGORY_LABELS: Record<string, string> = {
 
 export const categoryLabel = (code: string) => CATEGORY_LABELS[code] ?? "";
 
+/** The AI's suggestion on each paper (advice only — not the user's own feedback). */
 export const VERDICT_LABELS: Record<string, string> = {
-  READ: "Worth reading in full",
-  CLIENT: "Worth bringing to a client",
-  FYI: "For your information — good to know",
+  READ: "Suggested: read in full",
+  CLIENT: "Suggested: share with a client",
+  FYI: "Suggested: for your information",
 };
 
 /** Plain words shown instead of internal status names. */
@@ -55,8 +56,7 @@ export const TIPS = {
   preview: "Not sent yet. Its papers can still appear in Monday's brief until you email it or mark it as delivered.",
   delivered: "Sent. Papers in this brief will never appear in a future brief.",
   headline: "A 2–3 sentence summary of the most important developments across all topics, written by Gemini AI.",
-  feedback:
-    "Read in full = show more like this · Bring to client = save to Library · Not useful = never show again · Star = bookmark. Your feedback teaches the ranking.",
+  feedback: "Useful = more like this · Not useful = never show again · Bookmark = save to Bookmarks (also counts as Useful).",
   closestMiss: "The best paper in this topic that scored just below your pass mark.",
   alsoRelevant: "This paper fits more than one topic. It is shown once, under the topic where it scored highest.",
 };

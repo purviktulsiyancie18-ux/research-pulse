@@ -15,12 +15,17 @@ export async function POST(req: Request) {
   const f = parsed.data;
   const paper = await q1("select 1 from papers where arxiv_id = $1", [f.arxivId]);
   if (!paper) return jsonError("Paper not found", 404);
+  // Bookmark and "Not useful" contradict each other, so the newer choice wins:
+  // marking Not useful removes the bookmark; bookmarking clears Not useful (see SQL below).
+  if (f.verdict === "not_useful" && f.starred === undefined) f.starred = false;
   const row = await q1(
     `insert into feedback (arxiv_id, domain_id, brief_id, verdict, starred, note, client_tag)
      values ($1, $2, $3, $4, coalesce($5, false), $6, $7)
      on conflict (arxiv_id, domain_id) do update set
        brief_id = coalesce(excluded.brief_id, feedback.brief_id),
-       verdict = case when $8 then excluded.verdict else feedback.verdict end,
+       verdict = case when $8 then excluded.verdict
+                      when $5 is true and feedback.verdict = 'not_useful' then null
+                      else feedback.verdict end,
        starred = coalesce($5, feedback.starred),
        note = case when $9 then excluded.note else feedback.note end,
        client_tag = case when $10 then excluded.client_tag else feedback.client_tag end,

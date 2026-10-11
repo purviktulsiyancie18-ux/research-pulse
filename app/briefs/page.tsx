@@ -85,11 +85,11 @@ export default async function ArchivePage({ searchParams }: PageProps<"/briefs">
               </option>
             ))}
           </select>
-          <select name="verdict" defaultValue={verdict} className="input flex-[1_1_160px]" aria-label="Verdict">
-            <option value="">Any verdict</option>
-            <option value="READ">READ · read in full</option>
-            <option value="CLIENT">CLIENT · bring to client</option>
-            <option value="FYI">FYI · for your information</option>
+          <select name="verdict" defaultValue={verdict} className="input flex-[1_1_160px]" aria-label="AI suggestion">
+            <option value="">Any AI suggestion</option>
+            <option value="READ">Suggested: Read in full</option>
+            <option value="CLIENT">Suggested: Share with client</option>
+            <option value="FYI">Suggested: FYI</option>
           </select>
           <button className="btn btn-primary">Search</button>
           {filtering && (
@@ -107,7 +107,7 @@ export default async function ArchivePage({ searchParams }: PageProps<"/briefs">
               <Search size={22} />
             </span>
             <p className="h3 mt-3">0 matching papers</p>
-            <p className="mt-1 text-[14px] text-muted-text">Try fewer words, or clear the topic and verdict filters.</p>
+            <p className="mt-1 text-[14px] text-muted-text">Try fewer words, or clear the topic and suggestion filters.</p>
           </div>
         ) : (
           <>

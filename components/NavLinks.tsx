@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 const PRIMARY = [
   { href: "/", label: "Brief", match: (p: string) => p === "/" || /^\/briefs\/[^/]+$/.test(p) },
   { href: "/briefs", label: "Archive", match: (p: string) => p === "/briefs" },
-  { href: "/library", label: "Library", match: (p: string) => p.startsWith("/library") },
+  { href: "/bookmarks", label: "Bookmarks", match: (p: string) => p.startsWith("/bookmarks") },
   { href: "/settings", label: "Settings", match: (p: string) => p.startsWith("/settings") },
 ];
 const SECONDARY = [
@@ -31,7 +31,7 @@ export function NavLinks({ libraryCount, showUnlock }: { libraryCount: number; s
             }`}
           >
             {n.label}
-            {n.href === "/library" && libraryCount > 0 && (
+            {n.href === "/bookmarks" && libraryCount > 0 && (
               <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-tint px-1.5 text-[11px] font-bold text-primary-hover font-tabular">
                 {libraryCount}
               </span>

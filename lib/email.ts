@@ -79,12 +79,12 @@ export function renderEmail(v: BriefView) {
     <h1 style="font-size:28px;font-weight:800;letter-spacing:-0.02em;color:#151A33;margin:6px 0 2px">Week of ${e(fmtDate(v.windowEnd))}</h1>
     <p style="font-size:13px;color:#6B7394;margin:0 0 16px">${e(fmtDate(v.windowStart))} – ${e(fmtDate(v.windowEnd))} &middot; ${e(statsLine(v))} &middot; ~${v.readingMinutes ?? "?"} min read</p>
     ${v.headline ? `<p style="font-size:16px;font-weight:600;line-height:1.55;color:#151A33;background:#EAF0FD;border:1px solid #C3D4FA;padding:16px 18px;border-radius:16px">${e(v.headline)}</p>` : ""}
-    <p style="font-size:12px;color:#6B7394;margin:10px 0">Verdicts: <strong>READ</strong> = read in full &middot; <strong>CLIENT</strong> = bring to a client &middot; <strong>FYI</strong> = for your information. Scores are out of 10.</p>
+    <p style="font-size:12px;color:#6B7394;margin:10px 0">AI suggestions: <strong>READ</strong> = read in full &middot; <strong>CLIENT</strong> = share with a client &middot; <strong>FYI</strong> = for your information. Scores are out of 10.</p>
     ${notices}
     ${sections}
     <hr style="border:none;border-top:1px solid #E2E8F3;margin:32px 0 14px">
     <p style="font-size:13px;color:#6B7394">
-      <a href="${url}/briefs/${v.id}" style="color:#2563EB;font-weight:700">Open in Research Pulse</a> to mark papers Read / Bring to client / Not useful
+      <a href="${url}/briefs/${v.id}" style="color:#2563EB;font-weight:700">Open in Research Pulse</a> to mark papers Useful / Not useful or bookmark them
       &middot; <a href="${url}/settings" style="color:#2563EB">Manage domains</a>
     </p>
   </div></body></html>`;
