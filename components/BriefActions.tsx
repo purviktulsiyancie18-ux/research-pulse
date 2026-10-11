@@ -68,11 +68,35 @@ export function BriefActions(props: { briefId: string; status: string; emailedAt
             Mark as delivered
           </button>
         )}
+        {props.emailedAt && (
+          <button
+            className="btn"
+            disabled={busy}
+            title="Send another copy of this brief"
+            onClick={() => {
+              if (!confirm("This brief was already emailed. Send another copy?")) return;
+              act(async () => {
+                const r = await api<{ to: string }>(`/api/briefs/${props.briefId}/send?force=1`, { method: "POST" });
+                return `Emailed again to ${r.to}`;
+              });
+            }}
+          >
+            {busy ? "Sending…" : "Resend email"}
+          </button>
+        )}
       </div>
-      {props.emailedAt && (
-        <span className="text-xs text-muted">
-          Emailed {new Date(props.emailedAt).toLocaleString("en-GB", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+      {props.emailedAt ? (
+        <span className="rounded bg-brand-soft px-2 py-0.5 text-xs text-brand">
+          ✓ Emailed{" "}
+          {new Date(props.emailedAt).toLocaleString("en-GB", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}{" "}
+          IST (counted as delivered — these papers won&apos;t repeat)
         </span>
+      ) : (
+        props.status === "delivered" && (
+          <span className="rounded bg-brand-soft px-2 py-0.5 text-xs text-brand">
+            ✓ Marked as delivered (not emailed — these papers won&apos;t repeat)
+          </span>
+        )
       )}
       <span className="text-[11px] text-muted">(PDF = printable file · Markdown = formatted text)</span>
       {msg && <span className="text-xs text-muted">{msg}</span>}
