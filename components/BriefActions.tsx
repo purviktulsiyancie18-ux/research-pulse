@@ -25,11 +25,12 @@ export function BriefActions(props: { briefId: string; status: string; emailedAt
   return (
     <div className="no-print flex flex-col items-end gap-1">
       <div className="flex flex-wrap justify-end gap-1.5">
-        <button className="btn" onClick={() => window.print()}>
+        <button className="btn" title="Opens the print window — choose Save as PDF" onClick={() => window.print()}>
           Export PDF
         </button>
         <button
           className="btn"
+          title="Copies the brief as formatted text for Notion, Google Docs, etc."
           onClick={async () => {
             await navigator.clipboard.writeText(props.markdown);
             setMsg("Markdown copied to clipboard");
@@ -40,6 +41,7 @@ export function BriefActions(props: { briefId: string; status: string; emailedAt
         {!props.emailedAt && (
           <button
             className="btn btn-primary"
+            title="Emails this brief to the recipient in Settings"
             disabled={busy}
             onClick={() =>
               act(async () => {
@@ -72,6 +74,7 @@ export function BriefActions(props: { briefId: string; status: string; emailedAt
           Emailed {new Date(props.emailedAt).toLocaleString("en-GB", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
         </span>
       )}
+      <span className="text-[11px] text-muted">(PDF = printable file · Markdown = formatted text)</span>
       {msg && <span className="text-xs text-muted">{msg}</span>}
     </div>
   );

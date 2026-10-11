@@ -3,6 +3,7 @@ import { RetryDomainButton } from "@/components/RetryDomainButton";
 import { fmtDate } from "@/lib/brief";
 import { q } from "@/lib/db";
 import { getDomains } from "@/lib/repo";
+import { PROGRESS_LABELS } from "@/lib/glossary";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,11 @@ const STATUS: Record<string, string> = {
   skipped: "bg-gray-100 text-gray-700",
 };
 
-const MODE: Record<string, string> = { since_last_brief: "Since last brief", last_n_days: "Last N days", custom: "Custom" };
+const MODE: Record<string, string> = {
+  since_last_brief: "Since last brief",
+  last_n_days: "Last N days",
+  custom: "Custom dates",
+};
 
 export default async function RunsPage() {
   const [runs, domains] = await Promise.all([
@@ -51,7 +56,10 @@ export default async function RunsPage() {
   return (
     <div className="mx-auto max-w-[900px]">
       <h1 className="text-2xl font-bold">Run history</h1>
-      <p className="text-sm text-muted">Every weekly and manual run, with per-domain status. Failed or skipped domains can be retried.</p>
+      <p className="text-sm text-muted">
+        A log of every run (one attempt to build a brief). Click a row for details. Status: SUCCEEDED = all worked · PARTIAL = some topics failed but a
+        brief was made · FAILED = nothing worked · SKIPPED = Monday run skipped because delivery is paused. Failed topics can be retried.
+      </p>
       {runs.length === 0 && <p className="mt-6 text-sm text-muted">No runs yet.</p>}
       <ul className="mt-4 flex flex-col gap-2">
         {runs.map((r) => {
@@ -69,14 +77,14 @@ export default async function RunsPage() {
                   <span className={`rounded px-1.5 py-0.5 text-[11px] font-bold uppercase ${STATUS[r.status] ?? ""}`}>{r.status}</span>
                   <span className="font-medium">{started} IST</span>
                   <span className="text-muted">
-                    {r.trigger === "cron" ? "Weekly (cron)" : "Manual"} · {MODE[r.mode]}
+                    {r.trigger === "cron" ? "Weekly (automatic Monday job)" : "Manual (Refresh button)"} · {MODE[r.mode]}
                   </span>
                   <span className="text-muted">
                     {fmtDate(r.window_start, { day: "numeric", month: "short" })} – {fmtDate(r.window_end, { day: "numeric", month: "short" })}
                   </span>
                   <span className="ml-auto font-mono text-xs text-muted">
                     {r.stats?.duration_ms ? `${Math.round(r.stats.duration_ms / 1000)}s` : "—"} · {r.stats?.scanned ?? 0} scanned ·{" "}
-                    {r.stats?.surfaced ?? 0} kept · {r.stats?.gemini_calls ?? 0} Gemini calls
+                    {r.stats?.surfaced ?? 0} kept · {r.stats?.gemini_calls ?? 0} Gemini calls (AI requests)
                   </span>
                 </summary>
                 <div className="border-t border-line px-4 py-3 text-sm">
@@ -88,7 +96,9 @@ export default async function RunsPage() {
                         return (
                           <tr key={id} className="border-b border-line last:border-0">
                             <td className="py-1.5">{name(id)}</td>
-                            <td className="py-1.5 text-xs">{st}</td>
+                            <td className="py-1.5 text-xs">
+                              {st} <span className="text-muted">({PROGRESS_LABELS[st] ?? st})</span>
+                            </td>
                             <td className="py-1.5 text-right font-mono text-xs text-muted">
                               {pd ? `${pd.scanned} scanned · ${pd.surfaced} surfaced` : ""}
                               {pd?.error && <span className="ml-2 text-red-700">{pd.error}</span>}
@@ -102,8 +112,9 @@ export default async function RunsPage() {
                     </tbody>
                   </table>
                   <p className="mt-2 text-xs text-muted">
-                    arXiv requests: {r.stats?.arxiv_requests ?? 0} · Semantic Scholar: {r.stats?.s2_ok === false ? "unavailable" : r.stats?.s2_ok ? "ok" : "off"} ·
-                    Hugging Face: {r.stats?.hf_ok === false ? "unavailable" : r.stats?.hf_ok ? "ok" : "off"}
+                    arXiv requests (paper fetches): {r.stats?.arxiv_requests ?? 0} · Semantic Scholar (author data):{" "}
+                    {r.stats?.s2_ok === false ? "unavailable" : r.stats?.s2_ok ? "ok" : "off"} · Hugging Face (community likes):{" "}
+                    {r.stats?.hf_ok === false ? "unavailable" : r.stats?.hf_ok ? "ok" : "off"}
                     {r.brief_id && (
                       <>
                         {" · "}

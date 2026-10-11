@@ -23,6 +23,7 @@ const NAV = [
   { href: "/briefs", label: "Archive" },
   { href: "/library", label: "Library" },
   { href: "/runs", label: "Runs" },
+  { href: "/scoring", label: "Scoring" },
   { href: "/settings", label: "Settings" },
 ];
 
@@ -51,7 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </header>
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
         <footer className="no-print border-t border-line py-4 text-center text-xs text-muted">
-          Research Pulse · arXiv + Semantic Scholar + Hugging Face · summaries by Gemini Flash · brief goes to Kavita only
+          Research Pulse · papers from arXiv (free research paper site) · author data from Semantic Scholar · community likes from Hugging Face · summaries by Gemini Flash (Google AI) · brief goes to Kavita only
         </footer>
       </body>
     </html>

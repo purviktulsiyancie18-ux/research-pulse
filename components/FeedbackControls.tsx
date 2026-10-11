@@ -5,10 +5,10 @@ import { api } from "@/lib/client";
 
 type Verdict = "read" | "client" | "not_useful" | null;
 
-const BUTTONS: { value: Exclude<Verdict, null>; label: string; active: string }[] = [
-  { value: "read", label: "Read in full", active: "border-blue-600 bg-blue-600 text-white" },
-  { value: "client", label: "Bring to client", active: "border-green-700 bg-green-700 text-white" },
-  { value: "not_useful", label: "Not useful", active: "border-gray-600 bg-gray-600 text-white" },
+const BUTTONS: { value: Exclude<Verdict, null>; label: string; hint: string; active: string }[] = [
+  { value: "read", label: "Read in full", hint: "I'll read this — show me more like it", active: "border-blue-600 bg-blue-600 text-white" },
+  { value: "client", label: "Bring to client", hint: "I'll use this with a client — saved to Library", active: "border-green-700 bg-green-700 text-white" },
+  { value: "not_useful", label: "Not useful", hint: "Not relevant — never show this paper again", active: "border-gray-600 bg-gray-600 text-white" },
 ];
 
 export function FeedbackControls(props: {
@@ -40,11 +40,16 @@ export function FeedbackControls(props: {
 
   return (
     <div className="no-print mt-3 border-t border-line pt-3">
+      <p className="mb-1.5 text-[11px] text-muted">
+        Your feedback (teaches the ranking): Read in full = show more like this · Bring to client = save to Library · Not useful = hide forever · Star =
+        bookmark
+      </p>
       <div className="flex flex-wrap items-center gap-1.5">
         {BUTTONS.map((b) => (
           <button
             key={b.value}
             type="button"
+            title={b.hint}
             onClick={() => {
               const next = verdict === b.value ? null : b.value;
               setVerdict(next);
@@ -84,7 +89,7 @@ export function FeedbackControls(props: {
           />
           <input
             className="input h-fit"
-            placeholder="Client tag (e.g. Acme Bank)"
+            placeholder="Client tag — which client (e.g. Acme Bank)"
             value={clientTag}
             onChange={(e) => setClientTag(e.target.value)}
             onBlur={() => clientTag !== (props.initial.clientTag ?? "") && save({ clientTag: clientTag || null })}

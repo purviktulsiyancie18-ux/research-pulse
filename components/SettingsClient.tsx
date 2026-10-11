@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/client";
+import { categoryLabel } from "@/lib/glossary";
 import type { Domain, Settings } from "@/lib/types";
 import { TagInput } from "./TagInput";
 
@@ -50,7 +51,10 @@ export function SettingsClient(props: { domains: Domain[]; settings: Settings; c
         <div className="flex flex-wrap items-end justify-between gap-2">
           <div>
             <h2 className="text-lg font-semibold">Domains</h2>
-            <p className="text-sm text-muted">What gets scanned every run. Changes apply from the next run — no code needed.</p>
+            <p className="text-sm text-muted">
+              Domains (research topics) scanned every run. Changes apply from the next run — no code needed. Switch = on/off (grey = paused,
+              skipped each week).
+            </p>
           </div>
           <button className="btn btn-primary" onClick={() => setEditing({ ...EMPTY })}>
             + Add domain
@@ -69,12 +73,21 @@ export function SettingsClient(props: { domains: Domain[]; settings: Settings; c
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium">{d.name}</span>
-                  <span className={`rounded px-1.5 text-[11px] font-semibold ${PRIORITY_STYLE[d.priority]}`}>{d.priority}</span>
+                  <span className={`rounded px-1.5 text-[11px] font-semibold ${PRIORITY_STYLE[d.priority]}`}>{d.priority} priority</span>
                   {!d.active && <span className="text-xs text-muted">paused</span>}
                 </div>
-                <p className="truncate text-xs text-muted">
-                  {d.categories.join(", ")} · {d.keywords.join(", ")}
-                  {d.exclude_keywords.length > 0 && <> · excludes {d.exclude_keywords.join(", ")}</>}
+                {d.description && <p className="text-xs italic text-[#38443d]">({d.description})</p>}
+                <p className="text-xs text-muted">
+                  <span className="font-medium">Categories:</span> {d.categories.map((c) => `${c} (${categoryLabel(c)})`).join(", ")}
+                </p>
+                <p className="text-xs text-muted">
+                  <span className="font-medium">Keywords:</span> {d.keywords.join(", ")}
+                  {d.exclude_keywords.length > 0 && (
+                    <>
+                      {" "}
+                      · <span className="font-medium">Excludes:</span> {d.exclude_keywords.join(", ")}
+                    </>
+                  )}
                 </p>
               </div>
               <div className="flex gap-1.5">
@@ -161,15 +174,15 @@ function DomainModal(props: { draft: DomainDraft; categories: string[]; onClose:
             <input className="input" value={d.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. AI for Healthcare Ops" />
           </div>
           <div>
-            <label className="label">What counts as relevant (one line — Gemini reads this)</label>
+            <label className="label">What counts as relevant (one line — Gemini, the AI, reads this to judge fit)</label>
             <input className="input" value={d.description} onChange={(e) => set("description", e.target.value)} />
           </div>
           <div>
-            <label className="label">Keywords (matched in title or abstract — any)</label>
+            <label className="label">Keywords (words searched in paper titles &amp; abstracts — the paper&apos;s short summary; any one match counts)</label>
             <TagInput value={d.keywords} onChange={(v) => set("keywords", v)} placeholder="Type and press Enter" />
           </div>
           <div>
-            <label className="label">arXiv categories</label>
+            <label className="label">arXiv categories (subject labels on arXiv — a paper must be in one of these AND match a keyword)</label>
             <div className="flex flex-wrap gap-1">
               {props.categories.map((c) => {
                 const on = d.categories.includes(c);
@@ -178,21 +191,22 @@ function DomainModal(props: { draft: DomainDraft; categories: string[]; onClose:
                     type="button"
                     key={c}
                     onClick={() => set("categories", on ? d.categories.filter((x) => x !== c) : [...d.categories, c])}
-                    className={`rounded border px-1.5 py-0.5 font-mono text-xs ${on ? "border-brand bg-brand text-white" : "border-line text-muted"}`}
+                    title={categoryLabel(c)}
+                    className={`rounded border px-1.5 py-0.5 text-xs ${on ? "border-brand bg-brand text-white" : "border-line text-muted"}`}
                   >
-                    {c}
+                    <span className="font-mono">{c}</span> <span className="opacity-80">({categoryLabel(c)})</span>
                   </button>
                 );
               })}
             </div>
           </div>
           <div>
-            <label className="label">Exclude papers containing</label>
+            <label className="label">Exclude papers containing (papers with these words are thrown out)</label>
             <TagInput value={d.exclude_keywords} onChange={(v) => set("exclude_keywords", v)} placeholder="e.g. medical" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label">Priority</label>
+              <label className="label">Priority (order &amp; space in the brief)</label>
               <select className="input" value={d.priority} onChange={(e) => set("priority", e.target.value as Domain["priority"])}>
                 <option value="high">High (+1 slot, shown first)</option>
                 <option value="normal">Normal</option>
@@ -200,7 +214,7 @@ function DomainModal(props: { draft: DomainDraft; categories: string[]; onClose:
               </select>
             </div>
             <div>
-              <label className="label">Papers per domain</label>
+              <label className="label">Papers per domain (maximum for this topic)</label>
               <select
                 className="input"
                 value={d.papers_per_domain ?? ""}
@@ -216,12 +230,12 @@ function DomainModal(props: { draft: DomainDraft; categories: string[]; onClose:
             </div>
           </div>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={d.active} onChange={(e) => set("active", e.target.checked)} /> Active
+            <input type="checkbox" checked={d.active} onChange={(e) => set("active", e.target.checked)} /> Active (scanned every week)
           </label>
 
           <div className="rounded-lg bg-background p-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm">Test this query on the last 7 days of arXiv (no AI)</span>
+              <span className="text-sm">Test these keywords on the last 7 days of arXiv (no AI used) — over 150 = too broad, 0 = too narrow</span>
               <button type="button" className="btn py-1 text-xs" onClick={runPreview} disabled={!d.keywords.length && !d.categories.length}>
                 Preview query
               </button>
@@ -286,14 +300,15 @@ function GlobalSettings({ settings, defaultRecipient }: { settings: Settings; de
   return (
     <section>
       <h2 className="text-lg font-semibold">Brief preferences</h2>
-      <p className="text-sm text-muted">Applies to every domain unless a domain overrides it.</p>
+      <p className="text-sm text-muted">Apply to every topic unless a topic overrides them. Click “Save preferences” at the bottom to keep changes.</p>
 
       <div className="card mt-3 grid gap-4 p-4 sm:grid-cols-2">
         <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-background p-3">
           <div className="text-sm">
             <p className="font-medium">Schedule: every Monday, 5:30–6:29 AM IST</p>
             <p className="text-xs text-muted">
-              Fixed in vercel.json (<code>0 0 * * 1</code>). Vercel Hobby cannot change it at runtime — see README to edit.
+              Set in the code (vercel.json, cron <code>0 0 * * 1</code> = every Monday 00:00 UTC — world standard time, 5:30 AM in India). Vercel&apos;s free plan can&apos;t
+              change it from the app — see README to edit.
             </p>
           </div>
           <label className="flex items-center gap-2 text-sm font-medium">
@@ -305,12 +320,12 @@ function GlobalSettings({ settings, defaultRecipient }: { settings: Settings; de
                 save({ delivery_paused: e.target.checked });
               }}
             />
-            Pause Monday delivery
+            Pause Monday delivery <span className="font-normal text-muted">(vacation mode)</span>
           </label>
         </div>
 
         <div>
-          <label className="label">Recipient email</label>
+          <label className="label">Recipient email (who receives the brief)</label>
           <input
             className="input"
             type="email"
@@ -321,11 +336,11 @@ function GlobalSettings({ settings, defaultRecipient }: { settings: Settings; de
           <p className="mt-1 text-xs text-muted">While sending from onboarding@resend.dev, only your Resend account email can receive.</p>
         </div>
         <div>
-          <label className="label">Papers per domain</label>
+          <label className="label">Papers per domain (max papers per topic, 1–8)</label>
           <input className="input" type="number" min={1} max={8} value={s.papers_per_domain} onChange={(e) => set("papers_per_domain", Number(e.target.value))} />
         </div>
         <div>
-          <label className="label">Significance threshold (0–10)</label>
+          <label className="label">Significance threshold (pass mark — minimum score 0–10 to be included)</label>
           <input
             className="input"
             type="number"
@@ -337,22 +352,22 @@ function GlobalSettings({ settings, defaultRecipient }: { settings: Settings; de
           />
         </div>
         <div>
-          <label className="label">Ranking style</label>
+          <label className="label">Ranking style (how scores are weighted — see Scoring tab)</label>
           <select className="input" value={s.ranking_style} onChange={(e) => set("ranking_style", e.target.value as Settings["ranking_style"])}>
-            <option value="breakthroughs">Breakthroughs only (fewer, stronger)</option>
-            <option value="balanced">Balanced</option>
-            <option value="broad">Broad (more papers)</option>
+            <option value="breakthroughs">Breakthroughs only (fewer, stronger papers; stricter pass mark)</option>
+            <option value="balanced">Balanced (recommended mix)</option>
+            <option value="broad">Broad (more papers; looser pass mark)</option>
           </select>
         </div>
         <div>
-          <label className="label">Reading time cap</label>
+          <label className="label">Reading time cap (maximum brief length)</label>
           <select className="input" value={s.reading_minutes} onChange={(e) => set("reading_minutes", Number(e.target.value))}>
             <option value={5}>5 minutes</option>
             <option value={10}>10 minutes</option>
           </select>
         </div>
         <div>
-          <label className="label">Detail level</label>
+          <label className="label">Detail level (how much is written per paper)</label>
           <select className="input" value={s.detail_level} onChange={(e) => set("detail_level", e.target.value as Settings["detail_level"])}>
             <option value="short">Short (one-line summary)</option>
             <option value="standard">Standard</option>
@@ -360,11 +375,11 @@ function GlobalSettings({ settings, defaultRecipient }: { settings: Settings; de
           </select>
         </div>
         <div>
-          <label className="label">Lookback days (first run / “Last N days”)</label>
+          <label className="label">Lookback days (how far back “Last N days” and the first brief look)</label>
           <input className="input" type="number" min={1} max={31} value={s.lookback_days} onChange={(e) => set("lookback_days", Number(e.target.value))} />
         </div>
         <div>
-          <label className="label">Client lens (optional industry)</label>
+          <label className="label">Client lens (optional industry — “Client angle” is written for it)</label>
           <input
             className="input"
             value={s.client_lens ?? ""}
@@ -373,21 +388,21 @@ function GlobalSettings({ settings, defaultRecipient }: { settings: Settings; de
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="label">Watch-list: authors</label>
+          <label className="label">Watch-list: authors (researchers you follow — +1.5 score boost)</label>
           <TagInput value={s.watchlist_authors} onChange={(v) => set("watchlist_authors", v)} placeholder="e.g. Yann LeCun" />
         </div>
         <div className="sm:col-span-2">
-          <label className="label">Watch-list: labs / orgs</label>
+          <label className="label">Watch-list: labs / orgs (organisations you follow — +1.5 boost)</label>
           <TagInput value={s.watchlist_orgs} onChange={(v) => set("watchlist_orgs", v)} placeholder="e.g. Google DeepMind" />
         </div>
         <div className="sm:col-span-2">
-          <label className="label">Watch-list: benchmarks / terms</label>
+          <label className="label">Watch-list: benchmarks / terms (benchmark = standard AI test, e.g. SWE-bench for coding — +1.5 boost)</label>
           <TagInput value={s.watchlist_terms} onChange={(v) => set("watchlist_terms", v)} placeholder="e.g. SWE-bench" />
         </div>
         <div>
-          <span className="label">Signal sources</span>
+          <span className="label">Signal sources (extra data used for scoring)</span>
           <label className="flex items-center gap-2 text-sm text-muted">
-            <input type="checkbox" checked disabled /> arXiv (always on)
+            <input type="checkbox" checked disabled /> arXiv (where papers come from — always on)
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input
@@ -395,16 +410,16 @@ function GlobalSettings({ settings, defaultRecipient }: { settings: Settings; de
               checked={s.sources.semantic_scholar}
               onChange={(e) => set("sources", { ...s.sources, semantic_scholar: e.target.checked })}
             />
-            Semantic Scholar (author h-index, TLDR)
+            Semantic Scholar (author h-index = how often their work is cited; TLDR = one-line summary)
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={s.sources.huggingface} onChange={(e) => set("sources", { ...s.sources, huggingface: e.target.checked })} />
-            Hugging Face (community upvotes)
+            Hugging Face (AI community site — upvotes = likes)
           </label>
         </div>
         <div className="grid gap-3">
           <div>
-            <label className="label">Manual refresh cooldown (minutes)</label>
+            <label className="label">Manual refresh cooldown (minutes to wait between Refreshes — saves free AI quota)</label>
             <input
               className="input"
               type="number"
@@ -420,7 +435,7 @@ function GlobalSettings({ settings, defaultRecipient }: { settings: Settings; de
               checked={s.email_manual_refresh_default}
               onChange={(e) => set("email_manual_refresh_default", e.target.checked)}
             />
-            Email manual refreshes by default
+            Email manual refreshes by default <span className="text-muted">(pre-ticks “Email this brief”)</span>
           </label>
         </div>
         <div className="sm:col-span-2 flex items-center gap-3">

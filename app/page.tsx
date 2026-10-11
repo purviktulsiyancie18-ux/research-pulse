@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BriefView } from "@/components/BriefView";
 import { RefreshPanel } from "@/components/RefreshPanel";
 import { TrendsStrip } from "@/components/TrendsStrip";
@@ -32,7 +33,10 @@ export default async function Home() {
         />
         <TrendsStrip />
         <div className="card no-print p-4 text-xs text-muted">
-          Weekly brief is emailed automatically every Monday, 5:30–6:29 AM IST
+          Weekly brief is emailed automatically every Monday, 5:30–6:29 AM IST (India time).{" "}
+          <Link href="/scoring" className="text-brand underline">
+            How papers are scored →
+          </Link>
           {settings.delivery_paused && <strong className="block text-amber-700">Delivery is paused (see Settings).</strong>}
         </div>
       </aside>

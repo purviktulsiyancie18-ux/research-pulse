@@ -25,6 +25,9 @@ export function BriefView({ view, showTitleLink = false }: { view: View; showTit
             >
               {view.status === "delivered" ? "DELIVERED" : "PREVIEW"}
             </span>
+            <span className="text-xs italic text-muted">
+              {view.status === "delivered" ? "(sent — these papers won't repeat)" : "(not sent yet — papers may appear again on Monday)"}
+            </span>
             <span className="text-xs text-muted">Last updated {lastUpdated} IST</span>
           </div>
           <h1 className="mt-1 text-2xl font-bold tracking-tight">
@@ -37,7 +40,8 @@ export function BriefView({ view, showTitleLink = false }: { view: View; showTit
             )}
           </h1>
           <p className="text-sm text-muted">
-            {fmtDate(view.windowStart)} – {fmtDate(view.windowEnd)} · {statsLine(view)} · ~{view.readingMinutes ?? "?"} min read
+            {fmtDate(view.windowStart)} – {fmtDate(view.windowEnd)} (papers published in this window) · {statsLine(view)} (surfaced = included) · ~
+            {view.readingMinutes ?? "?"} min read
           </p>
         </div>
         <BriefActions
@@ -49,7 +53,10 @@ export function BriefView({ view, showTitleLink = false }: { view: View; showTit
       </div>
 
       {view.headline && (
-        <p className="mt-4 rounded-r-lg border-l-4 border-brand bg-surface px-4 py-3 text-[15px] leading-relaxed">{view.headline}</p>
+        <div className="mt-4 rounded-r-lg border-l-4 border-brand bg-surface px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Headline of the week (AI summary across all topics)</p>
+          <p className="mt-1 text-[15px] leading-relaxed">{view.headline}</p>
+        </div>
       )}
 
       {view.notices.map((n) => (
@@ -72,9 +79,14 @@ export function BriefView({ view, showTitleLink = false }: { view: View; showTit
         <section key={s.domain.id} id={`d-${s.domain.id}`} className="mt-8 scroll-mt-16">
           <h2 className="border-b-2 border-brand-soft pb-1 text-xl font-bold text-brand">{s.domain.name}</h2>
           {s.notice && <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">⚠️ {s.notice}</p>}
-          {s.headline && s.cards.length > 0 && <p className="mt-2 text-[15px] italic text-[#38443d]">{s.headline}</p>}
+          {s.headline && s.cards.length > 0 && (
+            <p className="mt-2 text-[15px] italic text-[#38443d]">
+              <span className="not-italic text-xs font-semibold uppercase tracking-wide text-muted">This week: </span>
+              {s.headline}
+            </p>
+          )}
           {!s.cards.length && !s.notice && (
-            <p className="mt-2 text-sm text-muted">Quiet week — nothing above your threshold.</p>
+            <p className="mt-2 text-sm text-muted">Quiet week — nothing above your threshold (the minimum score set in Settings).</p>
           )}
           <div className="mt-3 flex flex-col gap-3">
             {s.cards.map((c) => (
@@ -83,7 +95,7 @@ export function BriefView({ view, showTitleLink = false }: { view: View; showTit
           </div>
           {!s.cards.length && s.closestMiss && (
             <details className="mt-2">
-              <summary className="cursor-pointer text-sm text-muted hover:text-brand">Closest miss</summary>
+              <summary className="cursor-pointer text-sm text-muted hover:text-brand">Closest miss (best paper that fell just short — click to view)</summary>
               <div className="mt-2">
                 <PaperCard card={s.closestMiss} briefId={view.id} />
               </div>

@@ -16,7 +16,7 @@ export async function TrendsStrip() {
   return (
     <div className="card no-print p-4">
       <h2 className="font-semibold">Trends</h2>
-      <p className="text-xs text-muted">Papers scanned per domain — latest brief vs the one before</p>
+      <p className="text-xs text-muted">Papers scanned (looked at) per topic — latest brief vs the one before. Dark bar = now, grey = before, (+/−) = change, ✓ = included</p>
       <ul className="mt-3 grid gap-2.5">
         {domains.map((d) => {
           const n = now[d.id]?.scanned ?? 0;

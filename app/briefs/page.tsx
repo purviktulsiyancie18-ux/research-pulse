@@ -66,7 +66,9 @@ export default async function ArchivePage({ searchParams }: PageProps<"/briefs">
   return (
     <div className="mx-auto max-w-[860px]">
       <h1 className="text-2xl font-bold">Archive</h1>
-      <p className="text-sm text-muted">Every brief, searchable across titles, summaries and your notes.</p>
+      <p className="text-sm text-muted">
+        Every brief ever made. Search across titles, summaries and your notes. PREVIEW = not sent yet · DELIVERED = sent (papers won&apos;t repeat).
+      </p>
 
       <form className="card mt-4 grid gap-2 p-3 sm:grid-cols-[1fr_200px_140px_auto]">
         <input name="q" defaultValue={term} placeholder="Search title, summary, notes…" className="input" />
@@ -80,9 +82,9 @@ export default async function ArchivePage({ searchParams }: PageProps<"/briefs">
         </select>
         <select name="verdict" defaultValue={verdict} className="input">
           <option value="">Any verdict</option>
-          <option value="READ">READ</option>
-          <option value="CLIENT">CLIENT</option>
-          <option value="FYI">FYI</option>
+          <option value="READ">READ (read in full)</option>
+          <option value="CLIENT">CLIENT (bring to client)</option>
+          <option value="FYI">FYI (good to know)</option>
         </select>
         <div className="flex gap-1.5">
           <button className="btn btn-primary">Search</button>
@@ -123,9 +125,9 @@ export default async function ArchivePage({ searchParams }: PageProps<"/briefs">
             <thead className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
               <tr>
                 <th className="px-3 py-2">Week of</th>
-                <th className="px-3 py-2">Window</th>
-                <th className="px-3 py-2 text-right">Scanned</th>
-                <th className="px-3 py-2 text-right">Surfaced</th>
+                <th className="px-3 py-2">Window (dates covered)</th>
+                <th className="px-3 py-2 text-right">Scanned (looked at)</th>
+                <th className="px-3 py-2 text-right">Surfaced (included)</th>
                 <th className="px-3 py-2">Status</th>
               </tr>
             </thead>

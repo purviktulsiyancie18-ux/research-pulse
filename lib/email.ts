@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { q, q1 } from "./db";
 import { authorLine, briefSubject, briefToMarkdown, fmtDate, getBriefView, statsLine, type BriefView, type Card } from "./brief";
+import { explainChip, VERDICT_LABELS } from "./glossary";
 import { getSettings, recipientFor } from "./repo";
 
 export function escapeHtml(s: string | null | undefined) {
@@ -21,7 +22,7 @@ const VERDICT_COLORS: Record<string, string> = { READ: "#1d4ed8", CLIENT: "#1580
 function cardHtml(c: Card) {
   const e = escapeHtml;
   const badge = c.verdict
-    ? `<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;color:#fff;background:${VERDICT_COLORS[c.verdict]}">${c.verdict}</span>`
+    ? `<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;color:#fff;background:${VERDICT_COLORS[c.verdict]}">${c.verdict}</span> <span style="font-style:italic">(${VERDICT_LABELS[c.verdict]})</span>`
     : `<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;color:#92400e;background:#fef3c7">AI summary unavailable</span>`;
   const row = (label: string, v: string | null) =>
     v ? `<p style="margin:6px 0;font-size:14px;line-height:1.5;color:#1f2937"><strong>${label}:</strong> ${e(v)}</p>` : "";
@@ -34,16 +35,16 @@ function cardHtml(c: Card) {
     .join(" &middot; ");
   return `
   <div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;margin:12px 0;background:#ffffff">
-    <div style="font-size:12px;color:#6b7280;margin-bottom:6px">${badge} &nbsp;Score ${c.score.toFixed(1)} &middot; ${e(fmtDate(c.publishedAt))}</div>
+    <div style="font-size:12px;color:#6b7280;margin-bottom:6px">${badge} &nbsp;Score ${c.score.toFixed(1)}/10 &middot; ${e(fmtDate(c.publishedAt))}</div>
     <a href="${e(c.absUrl)}" style="font-size:16px;font-weight:700;color:#111827;text-decoration:none;line-height:1.35">${e(c.title)}</a>
     <p style="margin:4px 0 8px;font-size:12px;color:#6b7280">${e(authorLine(c.authors))}${c.affiliations.length ? ` &middot; ${e(c.affiliations.join(", "))}` : ""}</p>
-    ${row("Summary", c.summary)}
-    ${row("Key finding", c.keyFinding)}
-    ${row("Why it matters", c.whyItMatters)}
-    ${row("Client angle", c.clientAngle)}
-    ${row("Method", c.method)}
-    ${row("Limitations", c.limitations)}
-    ${c.chips.length ? `<p style="margin:8px 0 4px;font-size:12px;color:#4b5563">Why ranked: ${c.chips.map(e).join(" &middot; ")}</p>` : ""}
+    ${row("Summary (what they did)", c.summary)}
+    ${row("Key finding (main result)", c.keyFinding)}
+    ${row("Why it matters (for a strategy consultant)", c.whyItMatters)}
+    ${row("Client angle (what it means for a business)", c.clientAngle)}
+    ${row("Method (how they did it)", c.method)}
+    ${row("Limitations (weak spots)", c.limitations)}
+    ${c.chips.length ? `<p style="margin:8px 0 4px;font-size:12px;color:#4b5563">Why ranked (reasons for the score): ${c.chips.map((x) => e(explainChip(x))).join(" &middot; ")}</p>` : ""}
     ${c.alsoRelevantTo.length ? `<p style="margin:4px 0;font-size:12px;color:#6b7280">Also relevant to: ${e(c.alsoRelevantTo.join(", "))}</p>` : ""}
     <p style="margin:8px 0 0;font-size:13px">${links}</p>
   </div>`;
