@@ -51,6 +51,8 @@ export interface BriefView {
   emailedAt: string | null;
   createdAt: string;
   runId: string | null;
+  /** arXiv id of the highest-scoring paper in the brief ("Top pick"). */
+  topPickId: string | null;
   sections: BriefSection[];
 }
 
@@ -65,7 +67,7 @@ export async function getBriefView(id: string): Promise<BriefView | null> {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const b = await q1<Row>("select * from briefs where id = $1", [id]);
   if (!b) return null;
-  const domains = await getDomains();
+  const domains = await getDomains({ includeArchived: true });
   const byId = new Map(domains.map((d) => [d.id, d]));
   const rows = await q<Row>(
     `select bi.domain_id, bi.arxiv_id, bi.rank, bi.final_score, bi.score_breakdown, bi.also_relevant_to, bi.ai_available, bi.closest_miss,
@@ -158,6 +160,7 @@ export async function getBriefView(id: string): Promise<BriefView | null> {
     emailedAt: b.emailed_at ? iso(b.emailed_at) : null,
     createdAt: iso(b.created_at),
     runId: (b.run_id as string) ?? null,
+    topPickId: cards.filter((c) => !c.closestMiss).sort((a, b) => b.score - a.score)[0]?.arxivId ?? null,
     sections,
   };
 }

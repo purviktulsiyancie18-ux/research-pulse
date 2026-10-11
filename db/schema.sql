@@ -132,6 +132,9 @@ create table if not exists feedback (
   unique (arxiv_id, domain_id)
 );
 
+-- Deleting a domain archives it so past briefs keep their papers
+alter table domains add column if not exists archived boolean not null default false;
+
 create index if not exists papers_published_idx on papers (published_at desc);
 create index if not exists brief_items_arxiv_idx on brief_items (arxiv_id);
 create index if not exists runs_started_idx on runs (started_at desc);

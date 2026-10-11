@@ -1,14 +1,17 @@
 "use client";
 
+import { ChevronDown, CircleCheck, Pencil, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { accentFor } from "@/lib/accents";
 import { api } from "@/lib/client";
 import { categoryLabel } from "@/lib/glossary";
 import type { Domain, Settings } from "@/lib/types";
+import { Segmented, Stepper, Switch } from "./Controls";
+import { DomainModal, Modal, type DomainDraft } from "./DomainModal";
 import { InfoTip } from "./InfoTip";
 import { TagInput } from "./TagInput";
-
-type DomainDraft = Omit<Domain, "id"> & { id?: number };
+import { toast } from "./Toast";
 
 const EMPTY: DomainDraft = {
   name: "",
@@ -21,474 +24,408 @@ const EMPTY: DomainDraft = {
   active: true,
 };
 
-const PRIORITY_STYLE = { high: "bg-red-50 text-red-700", normal: "bg-gray-100 text-gray-700", low: "bg-blue-50 text-blue-700" };
+const PRIORITY: Record<Domain["priority"], string> = {
+  high: "bg-primary-tint text-primary-hover",
+  normal: "bg-[#EEF0F6] text-body",
+  low: "bg-teal/12 text-teal-ink",
+};
 
-export function SettingsClient(props: { domains: Domain[]; settings: Settings; categories: string[]; defaultRecipient: string | null }) {
+function Card({ title, sub, tip, action, children }: { title: string; sub?: string; tip?: string; action?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section className="card">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <div className="min-w-0 flex-1">
+          <h2 className="h2 flex items-center">
+            {title}
+            {tip && <InfoTip text={tip} align="left" />}
+          </h2>
+          {sub && <p className="text-[14px] text-muted-text">{sub}</p>}
+        </div>
+        {action}
+      </div>
+      <div className="mt-5">{children}</div>
+    </section>
+  );
+}
+
+export function SettingsClient({ domains, settings, defaultRecipient }: { domains: Domain[]; settings: Settings; defaultRecipient: string | null }) {
   const router = useRouter();
   const [editing, setEditing] = useState<DomainDraft | null>(null);
-  const [rowMsg, setRowMsg] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<Domain | null>(null);
+  const [busy, setBusy] = useState(false);
+  const active = domains.filter((d) => d.active).length;
 
   async function toggle(d: Domain) {
     try {
       await api(`/api/domains/${d.id}`, { method: "PATCH", json: { active: !d.active } });
+      toast(d.active ? `Paused “${d.name}”` : `Resumed “${d.name}”`);
       router.refresh();
     } catch (e) {
-      setRowMsg((e as Error).message);
+      toast((e as Error).message, "error");
     }
   }
+
   async function remove(d: Domain) {
-    if (!confirm(`Delete “${d.name}”? Its papers in past briefs will be removed from the archive too.`)) return;
+    setBusy(true);
     try {
       await api(`/api/domains/${d.id}`, { method: "DELETE" });
+      toast(`Deleted “${d.name}”`);
+      setDeleting(null);
       router.refresh();
     } catch (e) {
-      setRowMsg((e as Error).message);
+      toast((e as Error).message, "error");
+    } finally {
+      setBusy(false);
     }
   }
 
   return (
-    <div className="grid gap-8">
-      <section>
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <div>
-            <h2 className="text-lg font-semibold">Domains</h2>
-            <p className="text-sm text-muted">
-              Research topics scanned every week. Switch one off to pause it.
-            </p>
-          </div>
-          <button className="btn btn-primary" onClick={() => setEditing({ ...EMPTY })}>
-            + Add domain
+    <div className="flex flex-col gap-6">
+      <Card
+        title="Domains"
+        sub={`${active} active · ${domains.length - active} paused`}
+        action={
+          <button className="btn btn-secondary" onClick={() => setEditing({ ...EMPTY })}>
+            <Plus size={17} /> Add domain
           </button>
-        </div>
-        {rowMsg && <p className="mt-2 text-sm text-red-700">{rowMsg}</p>}
-        <div className="card mt-3 divide-y divide-line">
-          {props.domains.length === 0 && <p className="p-4 text-sm text-muted">No domains yet — add one to start.</p>}
-          {props.domains.map((d) => (
-            <div key={d.id} className={`flex flex-wrap items-center gap-3 p-3 ${d.active ? "" : "opacity-60"}`}>
-              <label className="relative inline-flex cursor-pointer items-center" title={d.active ? "Active — click to pause" : "Paused — click to activate"}>
-                <input type="checkbox" className="peer sr-only" checked={d.active} onChange={() => toggle(d)} />
-                <span className="h-5 w-9 rounded-full bg-gray-300 transition peer-checked:bg-brand" />
-                <span className="absolute left-0.5 h-4 w-4 rounded-full bg-white shadow transition peer-checked:translate-x-4" />
-              </label>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium">{d.name}</span>
-                  <span className={`rounded px-1.5 text-[11px] font-semibold ${PRIORITY_STYLE[d.priority]}`}>{d.priority} priority</span>
-                  {!d.active && <span className="text-xs text-muted">paused</span>}
-                </div>
-                {d.description && <p className="text-xs italic text-[#38443d]">{d.description}</p>}
-                <p className="text-xs text-muted">
-                  <span className="font-medium">Categories:</span> {d.categories.map((c) => `${c} · ${categoryLabel(c)}`).join(", ")}
-                </p>
-                <p className="text-xs text-muted">
-                  <span className="font-medium">Keywords:</span> {d.keywords.join(", ")}
-                  {d.exclude_keywords.length > 0 && (
-                    <>
-                      {" "}
-                      · <span className="font-medium">Excludes:</span> {d.exclude_keywords.join(", ")}
-                    </>
-                  )}
-                </p>
+        }
+      >
+        {domains.length === 0 && <p className="text-[14px] text-muted-text">No domains yet — add one to start.</p>}
+        <div className="flex flex-col gap-3">
+          {domains.map((d) => (
+            <div key={d.id} className="panel flex flex-wrap items-start gap-4 p-4 sm:p-5">
+              <div className="pt-0.5">
+                <Switch label={`${d.name} active`} checked={d.active} onChange={() => toggle(d)} />
               </div>
-              <div className="flex gap-1.5">
-                <button className="btn py-1 text-xs" onClick={() => setEditing({ ...d })}>
-                  Edit
+              <div className={`min-w-0 flex-1 ${d.active ? "" : "opacity-65"}`}>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: accentFor(d.id).fill }} />
+                  <span className="font-display text-[17px] font-bold text-heading">{d.name}</span>
+                  <span className={`pill py-0.5 text-[11px] ${PRIORITY[d.priority]}`}>{d.priority} priority</span>
+                  {!d.active && <span className="pill bg-[#EEF0F6] py-0.5 text-[11px] text-body">Paused</span>}
+                </div>
+                {d.description && <p className="mt-1 text-[14px] text-body italic">{d.description}</p>}
+                <p className="mt-1.5 text-[12px] leading-[18px] text-muted-text">
+                  <span className="font-semibold text-body">Categories:</span> {d.categories.map((c) => `${c} · ${categoryLabel(c)}`).join(", ") || "—"}
+                </p>
+                <p className="text-[12px] leading-[18px] text-muted-text">
+                  <span className="font-semibold text-body">Keywords:</span> {d.keywords.join(", ")}
+                </p>
+                {d.exclude_keywords.length > 0 && (
+                  <p className="text-[12px] leading-[18px] text-muted-text">
+                    <span className="font-semibold text-body">Excludes:</span> {d.exclude_keywords.join(", ")}
+                  </p>
+                )}
+              </div>
+              <div className="flex gap-2 max-sm:w-full max-sm:justify-end">
+                <button className="btn btn-sm btn-ghost text-primary" onClick={() => setEditing({ ...d })}>
+                  <Pencil size={14} /> Edit
                 </button>
-                <button className="btn btn-danger py-1 text-xs" onClick={() => remove(d)}>
-                  Delete
+                <button className="btn btn-sm btn-danger" onClick={() => setDeleting(d)}>
+                  <Trash2 size={14} /> Delete
                 </button>
               </div>
             </div>
           ))}
         </div>
-      </section>
+      </Card>
 
-      <GlobalSettings settings={props.settings} defaultRecipient={props.defaultRecipient} />
+      <Preferences settings={settings} defaultRecipient={defaultRecipient} />
 
       {editing && (
         <DomainModal
           draft={editing}
-          categories={props.categories}
           onClose={() => setEditing(null)}
-          onSaved={() => {
+          onSaved={(msg) => {
             setEditing(null);
+            toast(msg);
             router.refresh();
           }}
         />
+      )}
+
+      {deleting && (
+        <Modal
+          title=""
+          label="Delete domain"
+          maxWidth={440}
+          onClose={() => setDeleting(null)}
+          footer={
+            <>
+              <button className="btn btn-ghost" onClick={() => setDeleting(null)}>
+                Cancel
+              </button>
+              <button className="btn bg-error text-white hover:bg-error-ink" disabled={busy} onClick={() => remove(deleting)}>
+                {busy ? "Deleting…" : "Delete domain"}
+              </button>
+            </>
+          }
+        >
+          <div className="flex flex-col items-center text-center">
+            <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-error/10 text-error-ink">
+              <Trash2 size={22} />
+            </span>
+            <p className="h3 mt-3">Delete “{deleting.name}”?</p>
+            <p className="mt-1 text-[14px] text-body">Future briefs won&apos;t include it. Past briefs keep their papers.</p>
+          </div>
+        </Modal>
       )}
     </div>
   );
 }
 
-function DomainModal(props: { draft: DomainDraft; categories: string[]; onClose: () => void; onSaved: () => void }) {
-  const [d, setD] = useState<DomainDraft>(props.draft);
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [preview, setPreview] = useState<{ count: number; capped: boolean; titles: { title: string; url: string }[] } | string | null>(null);
-  const set = <K extends keyof DomainDraft>(k: K, v: DomainDraft[K]) => setD((x) => ({ ...x, [k]: v }));
+const STYLE_HELP: Record<Settings["ranking_style"], string> = {
+  breakthroughs: "Fewer, stronger papers: leans on significance, stricter pass mark, at most 3 per domain.",
+  balanced: "The recommended mix of significance, relevance and signals.",
+  broad: "More papers: leans on relevance, looser pass mark, 2 extra per domain.",
+};
 
-  async function save() {
-    setSaving(true);
-    setError(null);
-    const body = {
-      name: d.name,
-      description: d.description,
-      keywords: d.keywords,
-      categories: d.categories,
-      exclude_keywords: d.exclude_keywords,
-      priority: d.priority,
-      papers_per_domain: d.papers_per_domain,
-      active: d.active,
-    };
-    try {
-      if (d.id) await api(`/api/domains/${d.id}`, { method: "PATCH", json: body });
-      else await api("/api/domains", { method: "POST", json: body });
-      props.onSaved();
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function runPreview() {
-    setPreview("Querying arXiv…");
-    try {
-      const r = await api<{ count: number; capped: boolean; titles: { title: string; url: string }[] }>(
-        `/api/domains/${d.id ?? "new"}/preview`,
-        { method: "POST", json: { keywords: d.keywords, categories: d.categories, exclude_keywords: d.exclude_keywords } },
-      );
-      setPreview(r);
-    } catch (e) {
-      setPreview((e as Error).message);
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-30 flex items-start justify-center overflow-y-auto bg-black/30 p-4" onClick={props.onClose}>
-      <div className="card my-8 w-full max-w-xl p-5" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-lg font-semibold">{d.id ? `Edit ${props.draft.name}` : "Add domain"}</h3>
-        <div className="mt-4 grid gap-3">
-          <div>
-            <label className="label">Name</label>
-            <input className="input" value={d.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. AI for Healthcare Ops" />
-          </div>
-          <div>
-            <label className="label">
-            What counts as relevant
-          </label>
-            <input
-              className="input"
-              value={d.description}
-              onChange={(e) => set("description", e.target.value)}
-              placeholder="One sentence — the AI uses this to judge which papers fit"
-            />
-          </div>
-          <div>
-            <label className="label">
-            Keywords
-          </label>
-            <TagInput value={d.keywords} onChange={(v) => set("keywords", v)} placeholder="Type a word or phrase, press Enter" />
-          </div>
-          <div>
-            <label className="label">
-            arXiv categories
-            <InfoTip text="Subject labels used on arXiv. A paper must be in one of the selected categories and also match a keyword." align="left" />
-          </label>
-            <div className="flex flex-wrap gap-1">
-              {props.categories.map((c) => {
-                const on = d.categories.includes(c);
-                return (
-                  <button
-                    type="button"
-                    key={c}
-                    onClick={() => set("categories", on ? d.categories.filter((x) => x !== c) : [...d.categories, c])}
-                    title={categoryLabel(c)}
-                    className={`rounded border px-1.5 py-0.5 text-xs ${on ? "border-brand bg-brand text-white" : "border-line text-muted"}`}
-                  >
-                    <span className="font-mono">{c}</span> <span className="opacity-80">· {categoryLabel(c)}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          <div>
-            <label className="label">
-            Exclude papers containing
-          </label>
-            <TagInput value={d.exclude_keywords} onChange={(v) => set("exclude_keywords", v)} placeholder="e.g. medical" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">
-            Priority
-          </label>
-              <select className="input" value={d.priority} onChange={(e) => set("priority", e.target.value as Domain["priority"])}>
-                <option value="high">High — shown first, +1 paper</option>
-                <option value="normal">Normal</option>
-                <option value="low">Low — 1 fewer paper</option>
-              </select>
-            </div>
-            <div>
-              <label className="label">
-            Papers per domain
-          </label>
-              <select
-                className="input"
-                value={d.papers_per_domain ?? ""}
-                onChange={(e) => set("papers_per_domain", e.target.value ? Number(e.target.value) : null)}
-              >
-                <option value="">Use global setting</option>
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={d.active} onChange={(e) => set("active", e.target.checked)} /> Active
-          </label>
-
-          <div className="rounded-lg bg-background p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">
-                Test on the last 7 days of arXiv — no AI used
-              </span>
-              <button type="button" className="btn py-1 text-xs" onClick={runPreview} disabled={!d.keywords.length && !d.categories.length}>
-                Preview query
-              </button>
-            </div>
-            {typeof preview === "string" && <p className="mt-2 text-sm text-muted">{preview}</p>}
-            {preview && typeof preview === "object" && (
-              <div className="mt-2 text-sm">
-                <p className="font-medium">
-                  {preview.count}
-                  {preview.capped ? "+" : ""} papers matched
-                  {preview.count > 150 && <span className="font-normal text-amber-700"> — consider narrower keywords</span>}
-                  {preview.count === 0 && <span className="font-normal text-amber-700"> — try broader keywords</span>}
-                </p>
-                <ul className="mt-1 list-disc pl-5 text-xs text-muted">
-                  {preview.titles.map((t) => (
-                    <li key={t.url}>
-                      <a href={t.url} target="_blank" rel="noreferrer" className="hover:underline">
-                        {t.title}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-        {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
-        <div className="mt-5 flex justify-end gap-2">
-          <button className="btn" onClick={props.onClose}>
-            Cancel
-          </button>
-          <button className="btn btn-primary" onClick={save} disabled={saving || !d.name.trim() || !d.keywords.length}>
-            {saving ? "Saving…" : "Save domain"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function GlobalSettings({ settings, defaultRecipient }: { settings: Settings; defaultRecipient: string | null }) {
+function Preferences({ settings, defaultRecipient }: { settings: Settings; defaultRecipient: string | null }) {
   const router = useRouter();
   const [s, setS] = useState<Settings>(settings);
-  const [msg, setMsg] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState<Settings>(settings);
+  const [state, setState] = useState<"idle" | "saving" | "saved">("idle");
+  const [advanced, setAdvanced] = useState(false);
   const set = <K extends keyof Settings>(k: K, v: Settings[K]) => setS((x) => ({ ...x, [k]: v }));
+  const dirty = JSON.stringify(s) !== JSON.stringify(saved);
 
-  async function save(patch?: Partial<Settings>) {
-    setSaving(true);
-    setMsg(null);
+  async function save() {
+    setState("saving");
     try {
-      await api("/api/settings", { method: "PATCH", json: patch ?? { ...s, recipient_email: s.recipient_email ?? "" } });
-      setMsg("Saved");
+      const body = { ...s, recipient_email: s.recipient_email ?? "", client_lens: s.client_lens ?? "" };
+      await api("/api/settings", { method: "PATCH", json: body });
+      setSaved(s);
+      setState("saved");
+      toast("Preferences saved");
       router.refresh();
     } catch (e) {
-      setMsg((e as Error).message);
-    } finally {
-      setSaving(false);
+      setState("idle");
+      toast((e as Error).message, "error");
+    }
+  }
+
+  async function togglePause(v: boolean) {
+    set("delivery_paused", v);
+    setSaved((x) => ({ ...x, delivery_paused: v }));
+    try {
+      await api("/api/settings", { method: "PATCH", json: { delivery_paused: v } });
+      toast(v ? "Monday delivery paused" : "Monday delivery resumed");
+      router.refresh();
+    } catch (e) {
+      toast((e as Error).message, "error");
     }
   }
 
   return (
-    <section>
-      <h2 className="text-lg font-semibold">Brief preferences</h2>
-      <p className="text-sm text-muted">Apply to every topic. Click “Save preferences” at the bottom to keep changes.</p>
-
-      <div className="card mt-3 grid gap-4 p-4 sm:grid-cols-2">
-        <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-background p-3">
-          <div className="text-sm">
-            <p className="font-medium">
-              Schedule: every Monday, 5:30–6:29 AM IST (India Standard Time)
-              <InfoTip text="Fixed in the code (vercel.json: every Monday 00:00 UTC, world standard time). Vercel’s free plan can’t change it from the app — see the README to edit it." align="left" />
-            </p>
-          </div>
-          <label className="flex items-center gap-2 text-sm font-medium">
-            <input
-              type="checkbox"
-              checked={s.delivery_paused}
-              onChange={(e) => {
-                set("delivery_paused", e.target.checked);
-                save({ delivery_paused: e.target.checked });
-              }}
-            />
+    <>
+      <Card title="Delivery">
+        <div className="panel flex flex-wrap items-center justify-between gap-3 px-4 py-3.5">
+          <p className="flex items-center font-display text-[15px] font-semibold text-heading">
+            Every Monday, 5:30–6:29 AM IST (India Standard Time)
+            <InfoTip text="The schedule is fixed by the system (set in the code). Use the switch to pause a week; the next brief covers everything since the last one sent." align="left" />
+          </p>
+          <label className="flex items-center gap-2.5 text-[14px] font-medium text-heading">
+            <Switch label="Pause Monday delivery" checked={s.delivery_paused} onChange={togglePause} />
             Pause Monday delivery
           </label>
         </div>
-
-        <div>
-          <label className="label">
+        <div className="mt-4 max-w-md">
+          <label className="field-label" htmlFor="st-email">
             Recipient email
           </label>
           <input
-            className="input"
+            id="st-email"
             type="email"
+            className="input"
             value={s.recipient_email ?? ""}
             placeholder={defaultRecipient ?? "you@example.com"}
             onChange={(e) => set("recipient_email", e.target.value)}
           />
         </div>
-        <div>
-          <label className="label">
-            Papers per domain
-          </label>
-          <input className="input" type="number" min={1} max={8} value={s.papers_per_domain} onChange={(e) => set("papers_per_domain", Number(e.target.value))} />
+      </Card>
+
+      <Card title="What gets included">
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div>
+            <p className="field-label">Papers per domain</p>
+            <Stepper label="papers per domain" value={s.papers_per_domain} min={1} max={8} onChange={(v) => set("papers_per_domain", v)} />
+          </div>
+          <div>
+            <p className="field-label">Days to look back</p>
+            <Stepper label="days to look back" value={s.lookback_days} min={1} max={31} onChange={(v) => set("lookback_days", v)} />
+            <p className="helper">Used by “Last N days” and your first brief.</p>
+          </div>
+          <div className="sm:col-span-2">
+            <div className="flex items-center">
+              <label className="field-label mb-0" htmlFor="st-thr">
+                Significance threshold
+              </label>
+              <InfoTip text="Your pass mark: the minimum score out of 10 a paper needs to be included. Higher = stricter, fewer papers." align="left" />
+              <span className="pill ml-auto bg-primary-tint text-primary-hover font-tabular">{s.significance_threshold.toFixed(1)}</span>
+            </div>
+            <input
+              id="st-thr"
+              type="range"
+              min={0}
+              max={10}
+              step={0.5}
+              value={s.significance_threshold}
+              onChange={(e) => set("significance_threshold", Number(e.target.value))}
+              className="mt-3 w-full accent-primary"
+            />
+            <p className="helper">Your pass mark — papers scoring below {s.significance_threshold.toFixed(1)} are left out.</p>
+          </div>
+          <div className="sm:col-span-2">
+            <p className="field-label">Ranking style</p>
+            <Segmented
+              label="Ranking style"
+              value={s.ranking_style}
+              onChange={(v) => set("ranking_style", v)}
+              options={[
+                { value: "breakthroughs", label: "Breakthroughs only" },
+                { value: "balanced", label: "Balanced" },
+                { value: "broad", label: "Broad" },
+              ]}
+            />
+            <p className="helper">{STYLE_HELP[s.ranking_style]}</p>
+          </div>
+          <div>
+            <p className="field-label">Reading time cap</p>
+            <Segmented
+              label="Reading time cap"
+              value={String(s.reading_minutes)}
+              onChange={(v) => set("reading_minutes", Number(v))}
+              options={[
+                { value: "5", label: "5 min" },
+                { value: "10", label: "10 min" },
+              ]}
+            />
+          </div>
         </div>
-        <div>
-          <label className="label">
-            Significance threshold
-            <InfoTip text="The pass mark: the minimum score out of 10 a paper needs to be included. Higher = stricter, fewer papers." align="left" />
-          </label>
-          <input
-            className="input"
-            type="number"
-            min={0}
-            max={10}
-            step={0.5}
-            value={s.significance_threshold}
-            onChange={(e) => set("significance_threshold", Number(e.target.value))}
-          />
+      </Card>
+
+      <Card title="Writing style">
+        <p className="field-label">Detail level</p>
+        <div role="radiogroup" aria-label="Detail level" className="grid gap-3 sm:grid-cols-3">
+          {(
+            [
+              ["short", "Short", "One-line summary"],
+              ["standard", "Standard", "Summary, key finding, why it matters, client angle"],
+              ["detailed", "Detailed", "Adds method & limitations"],
+            ] as const
+          ).map(([v, label, desc]) => {
+            const on = s.detail_level === v;
+            return (
+              <button
+                key={v}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                onClick={() => set("detail_level", v)}
+                className={`cursor-pointer rounded-panel border-[1.5px] p-4 text-left transition ${on ? "border-primary bg-primary-tint" : "border-line-strong bg-surface hover:border-primary/50"}`}
+              >
+                <span className={`block font-display text-[15px] font-bold ${on ? "text-primary-hover" : "text-heading"}`}>{label}</span>
+                <span className="mt-0.5 block text-[13px] leading-5 text-muted-text">{desc}</span>
+              </button>
+            );
+          })}
         </div>
-        <div>
-          <label className="label">
-            Ranking style
-            <InfoTip text="Breakthroughs only = fewer, stronger papers with a stricter pass mark. Balanced = recommended mix. Broad = more papers with a looser pass mark. See the Scoring tab." align="left" />
-          </label>
-          <select className="input" value={s.ranking_style} onChange={(e) => set("ranking_style", e.target.value as Settings["ranking_style"])}>
-            <option value="breakthroughs">Breakthroughs only</option>
-            <option value="balanced">Balanced</option>
-            <option value="broad">Broad</option>
-          </select>
-        </div>
-        <div>
-          <label className="label">
-            Reading time cap
-          </label>
-          <select className="input" value={s.reading_minutes} onChange={(e) => set("reading_minutes", Number(e.target.value))}>
-            <option value={5}>5 minutes</option>
-            <option value={10}>10 minutes</option>
-          </select>
-        </div>
-        <div>
-          <label className="label">
-            Detail level
-          </label>
-          <select className="input" value={s.detail_level} onChange={(e) => set("detail_level", e.target.value as Settings["detail_level"])}>
-            <option value="short">Short — one-line summary</option>
-            <option value="standard">Standard</option>
-            <option value="detailed">Detailed — adds method &amp; limitations</option>
-          </select>
-        </div>
-        <div>
-          <label className="label">
-            Days to look back
-          </label>
-          <input className="input" type="number" min={1} max={31} value={s.lookback_days} onChange={(e) => set("lookback_days", Number(e.target.value))} />
-        </div>
-        <div>
-          <label className="label">
+        <div className="mt-5 max-w-md">
+          <label className="field-label" htmlFor="st-lens">
             Client lens
           </label>
           <input
+            id="st-lens"
             className="input"
             value={s.client_lens ?? ""}
             placeholder="e.g. banking — tailors the client angle"
             onChange={(e) => set("client_lens", e.target.value || null)}
           />
         </div>
-        <div className="sm:col-span-2 -mb-2">
-          <p className="text-sm font-semibold">
-            Watch-list
-            <InfoTip text="Papers that mention any author, lab or term listed here get a +1.5 score boost." align="left" />
-          </p>
-        </div>
-        <div className="sm:col-span-2">
-          <label className="label">Authors</label>
-          <TagInput value={s.watchlist_authors} onChange={(v) => set("watchlist_authors", v)} placeholder="e.g. Yann LeCun" />
-        </div>
-        <div className="sm:col-span-2">
-          <label className="label">Labs / organisations</label>
-          <TagInput value={s.watchlist_orgs} onChange={(v) => set("watchlist_orgs", v)} placeholder="e.g. Google DeepMind" />
-        </div>
-        <div className="sm:col-span-2">
-          <label className="label">Benchmarks / terms</label>
-          <TagInput value={s.watchlist_terms} onChange={(v) => set("watchlist_terms", v)} placeholder="e.g. SWE-bench" />
-        </div>
-        <div>
-          <span className="label">Signal sources</span>
-          <label className="flex items-center gap-2 text-sm text-muted">
-            <input type="checkbox" checked disabled /> arXiv
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={s.sources.semantic_scholar}
-              onChange={(e) => set("sources", { ...s.sources, semantic_scholar: e.target.checked })}
-            />
-            Semantic Scholar <span className="text-muted">— author seniority</span>
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={s.sources.huggingface} onChange={(e) => set("sources", { ...s.sources, huggingface: e.target.checked })} />
-            Hugging Face <span className="text-muted">— community likes</span>
-          </label>
-        </div>
-        <div className="grid gap-3">
+      </Card>
+
+      <Card title="Watch-list" tip="Papers that mention any author, lab or term listed here get a +1.5 score boost.">
+        <div className="flex flex-col gap-4">
           <div>
-            <label className="label">
-            Refresh cooldown (minutes)
-          </label>
-            <input
-              className="input"
-              type="number"
-              min={0}
-              max={240}
-              value={s.refresh_cooldown_minutes}
-              onChange={(e) => set("refresh_cooldown_minutes", Number(e.target.value))}
-            />
+            <p className="field-label">Authors</p>
+            <TagInput label="Authors" tone="sky" value={s.watchlist_authors} onChange={(v) => set("watchlist_authors", v)} placeholder="e.g. Yann LeCun" />
           </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={s.email_manual_refresh_default}
-              onChange={(e) => set("email_manual_refresh_default", e.target.checked)}
-            />
-            Email manual refreshes by default
-          </label>
+          <div>
+            <p className="field-label">Labs / organisations</p>
+            <TagInput label="Labs" value={s.watchlist_orgs} onChange={(v) => set("watchlist_orgs", v)} placeholder="e.g. Google DeepMind" />
+          </div>
+          <div>
+            <p className="field-label">Benchmarks / terms</p>
+            <TagInput label="Terms" tone="pink" value={s.watchlist_terms} onChange={(v) => set("watchlist_terms", v)} placeholder="e.g. SWE-bench" />
+          </div>
         </div>
-        <div className="sm:col-span-2 flex items-center gap-3">
-          <button className="btn btn-primary" onClick={() => save()} disabled={saving}>
-            {saving ? "Saving…" : "Save preferences"}
-          </button>
-          {msg && <span className="text-sm text-muted">{msg}</span>}
-        </div>
+      </Card>
+
+      <section className="card">
+        <button type="button" aria-expanded={advanced} onClick={() => setAdvanced(!advanced)} className="flex w-full cursor-pointer items-center justify-between text-left">
+          <span className="h2">Advanced</span>
+          <ChevronDown size={22} className={`text-muted-text transition-transform duration-200 ${advanced ? "rotate-180" : ""}`} />
+        </button>
+        {advanced && (
+          <div className="mt-5 flex flex-col gap-1">
+            {[
+              { label: "arXiv", desc: "Where papers come from — always on", checked: true, disabled: true, on: () => {} },
+              {
+                label: "Semantic Scholar",
+                desc: "Author seniority",
+                checked: s.sources.semantic_scholar,
+                on: (v: boolean) => set("sources", { ...s.sources, semantic_scholar: v }),
+              },
+              { label: "Hugging Face", desc: "Community likes", checked: s.sources.huggingface, on: (v: boolean) => set("sources", { ...s.sources, huggingface: v }) },
+              {
+                label: "Email manual refreshes by default",
+                desc: "Pre-ticks “Email this brief when ready”",
+                checked: s.email_manual_refresh_default,
+                on: (v: boolean) => set("email_manual_refresh_default", v),
+              },
+            ].map((row) => (
+              <div key={row.label} className="flex items-center gap-4 border-b border-divider py-3 last:border-0">
+                <span className="flex-1">
+                  <span className="block text-[15px] font-medium text-heading">{row.label}</span>
+                  <span className="block text-[12px] text-muted-text">{row.desc}</span>
+                </span>
+                <Switch label={row.label} checked={row.checked} disabled={row.disabled} onChange={row.on} />
+              </div>
+            ))}
+            <div className="mt-3 max-w-[220px]">
+              <label className="field-label" htmlFor="st-cool">
+                Refresh cooldown (minutes)
+              </label>
+              <input
+                id="st-cool"
+                type="number"
+                min={0}
+                max={240}
+                className="input"
+                value={s.refresh_cooldown_minutes}
+                onChange={(e) => set("refresh_cooldown_minutes", Number(e.target.value))}
+              />
+            </div>
+          </div>
+        )}
+      </section>
+
+      <div className="sticky bottom-4 z-30 flex flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-white/90 px-5 py-3 shadow-card backdrop-blur-md">
+        <span className="text-[14px]" aria-live="polite">
+          {dirty ? (
+            <span className="font-medium text-amber-ink">Unsaved changes</span>
+          ) : state === "saved" ? (
+            <span className="inline-flex items-center gap-1.5 font-medium text-success-ink">
+              <CircleCheck size={16} /> Saved
+            </span>
+          ) : (
+            <span className="text-muted-text">All changes saved</span>
+          )}
+        </span>
+        <button className="btn btn-primary" onClick={save} disabled={!dirty || state === "saving"}>
+          {state === "saving" ? "Saving…" : "Save preferences"}
+        </button>
       </div>
-    </section>
+    </>
   );
 }

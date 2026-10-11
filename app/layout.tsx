@@ -1,59 +1,58 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import Image from "next/image";
 import Link from "next/link";
+import { NavLinks } from "@/components/NavLinks";
+import { Toaster } from "@/components/Toast";
+import { isAdmin, passcodeEnabled } from "@/lib/auth";
+import { libraryCount } from "@/lib/repo";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const jakarta = Plus_Jakarta_Sans({ variable: "--font-jakarta", subsets: ["latin"] });
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Research Pulse",
-  description: "Weekly AI-research brief — arXiv papers that matter, ranked and summarised by domain.",
+  description: "From research to real insights — a weekly AI-research brief, ranked and summarised by topic.",
+  icons: { icon: "/rp-mark.png", apple: "/rp-mark.png" },
 };
 
-const NAV = [
-  { href: "/", label: "Brief" },
-  { href: "/briefs", label: "Archive" },
-  { href: "/library", label: "Library" },
-  { href: "/runs", label: "Runs" },
-  { href: "/scoring", label: "Scoring" },
-  { href: "/settings", label: "Settings" },
-];
-
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
   const testMode = process.env.TEST_MODE === "true";
+  const [count, admin] = await Promise.all([libraryCount().catch(() => 0), isAdmin()]);
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
-        <header className="no-print sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur">
-          <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-2.5">
-            <Link href="/" className="flex items-center gap-2 font-bold text-brand">
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-brand" />
-              Research Pulse
+    <html lang="en" className={`${jakarta.variable} ${inter.variable} h-full antialiased`}>
+      <body className="flex min-h-full flex-col">
+        <header className="sticky top-0 z-40 border-b border-line bg-white/88 backdrop-blur-md">
+          <div className="mx-auto flex max-w-content flex-wrap items-center gap-x-4 gap-y-1 py-2.5" style={{ paddingInline: "clamp(16px,4vw,40px)" }}>
+            <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="Research Pulse home">
+              <Image src="/rp-mark.png" alt="" width={34} height={34} priority />
+              <span className="font-display text-[18px] font-extrabold tracking-[-0.01em]">
+                <span className="text-logo-ink">Research</span> <span className="text-logo-blue">Pulse</span>
+              </span>
             </Link>
-            {testMode && (
-              <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-amber-800">TEST</span>
-            )}
-            <nav className="ml-auto flex gap-1 overflow-x-auto text-sm">
-              {NAV.map((n) => (
-                <Link key={n.href} href={n.href} className="rounded-md px-2.5 py-1 text-muted hover:bg-brand-soft hover:text-brand">
-                  {n.label}
-                </Link>
-              ))}
-            </nav>
+            {testMode && <span className="pill bg-amber/14 text-[11px] text-amber-ink">TEST</span>}
+            <div className="ml-auto flex min-w-0 max-sm:ml-0 max-sm:w-full">
+              <NavLinks libraryCount={count} showUnlock={passcodeEnabled() && !admin} />
+            </div>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
-        <footer className="no-print border-t border-line py-4 text-center text-xs text-muted">
-          Research Pulse · Papers: arXiv · Author data: Semantic Scholar · Community likes: Hugging Face · AI: Gemini Flash · For Kavita only
+
+        <main className="mx-auto w-full max-w-content flex-1" style={{ padding: "clamp(20px,4vw,40px) clamp(16px,4vw,40px)" }}>
+          {children}
+        </main>
+
+        <footer className="mx-auto w-full max-w-content" style={{ padding: "0 clamp(16px,4vw,40px) clamp(20px,4vw,40px)" }}>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-card border border-line bg-surface px-6 py-5 text-[12px] leading-[18px] text-muted-text">
+            <span className="font-display text-[13px] font-bold text-heading">Research Pulse</span>
+            <span>Papers: arXiv</span>
+            <span>Author data: Semantic Scholar</span>
+            <span>Community likes: Hugging Face</span>
+            <span>AI: Gemini Flash</span>
+            <span className="ml-auto">For Kavita only</span>
+          </div>
         </footer>
+        <Toaster />
       </body>
     </html>
   );

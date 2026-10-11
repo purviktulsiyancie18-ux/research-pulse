@@ -1,9 +1,30 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useState } from "react";
 
-/** Chips input: Enter or comma adds a tag, Backspace on empty removes the last one. */
-export function TagInput({ value, onChange, placeholder }: { value: string[]; onChange: (v: string[]) => void; placeholder?: string }) {
+const TONES = {
+  blue: "bg-primary-tint text-primary-pressed",
+  sky: "bg-sky/12 text-sky-ink",
+  pink: "bg-pink/12 text-pink-ink",
+  red: "bg-error/10 text-error-ink",
+  teal: "bg-teal/12 text-teal-ink",
+};
+
+/** Chip input: Enter or comma adds a chip, Backspace on an empty field removes the last one. */
+export function TagInput({
+  value,
+  onChange,
+  placeholder,
+  tone = "blue",
+  label,
+}: {
+  value: string[];
+  onChange: (v: string[]) => void;
+  placeholder?: string;
+  tone?: keyof typeof TONES;
+  label?: string;
+}) {
   const [draft, setDraft] = useState("");
   const add = (raw: string) => {
     const parts = raw
@@ -15,17 +36,23 @@ export function TagInput({ value, onChange, placeholder }: { value: string[]; on
     setDraft("");
   };
   return (
-    <div className="input flex min-h-[38px] flex-wrap items-center gap-1">
+    <div className="flex min-h-12 w-full flex-wrap items-center gap-1.5 rounded-control border-[1.5px] border-line-strong bg-surface px-2 py-1.5 transition focus-within:border-primary focus-within:shadow-focus">
       {value.map((t) => (
-        <span key={t} className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-xs text-brand">
+        <span key={t} className={`inline-flex h-8 items-center gap-1 rounded-full pr-1 pl-3 text-[13px] font-medium ${TONES[tone]}`}>
           {t}
-          <button type="button" aria-label={`Remove ${t}`} onClick={() => onChange(value.filter((x) => x !== t))} className="hover:text-red-700">
-            ×
+          <button
+            type="button"
+            aria-label={`Remove ${t}`}
+            onClick={() => onChange(value.filter((x) => x !== t))}
+            className="inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-full hover:bg-black/8"
+          >
+            <X size={13} strokeWidth={2.25} />
           </button>
         </span>
       ))}
       <input
-        className="min-w-[120px] flex-1 bg-transparent outline-none"
+        aria-label={label}
+        className="min-h-8 min-w-[140px] flex-1 bg-transparent px-1.5 text-[15px] text-heading outline-none placeholder:text-muted"
         value={draft}
         placeholder={value.length ? "" : placeholder}
         onChange={(e) => {

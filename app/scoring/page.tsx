@@ -1,56 +1,43 @@
-import Link from "next/link";
+import { CircleCheck } from "lucide-react";
+import { ScoringIngredients, StackedBar } from "@/components/ScoringIngredients";
+import { INGREDIENTS } from "@/lib/ingredients";
+import { PageHeader, VerdictBadge } from "@/components/ui";
 import { effectiveThreshold, FALLBACK_WEIGHTS, normAuthor, normCommunity, scorePaper, STYLES } from "@/lib/ranking";
 import { getSettings } from "@/lib/repo";
 import type { RankingStyle } from "@/lib/types";
-import { InfoTip } from "@/components/InfoTip";
 
 export const dynamic = "force-dynamic";
 
-const STYLE_NAMES: Record<RankingStyle, string> = {
-  breakthroughs: "Breakthroughs only",
-  balanced: "Balanced",
-  broad: "Broad",
-};
+const STYLE_NAMES: Record<RankingStyle, string> = { breakthroughs: "Breakthroughs only", balanced: "Balanced", broad: "Broad" };
 
-const INGREDIENTS = [
-  {
-    key: "sig",
-    name: "Significance",
-    what: "How important or new the paper is — new record result, strong evidence, changes how the problem is seen, likely impact",
-    source: "Gemini AI reads the paper's abstract and rates it 0–10",
-  },
-  {
-    key: "rel",
-    name: "Relevance",
-    what: "How squarely the paper fits the topic, judged against the topic's “what counts as relevant” line in Settings",
-    source: "Gemini AI, 0–10",
-  },
-  {
-    key: "comm",
-    name: "Community buzz",
-    what: "How many Hugging Face members liked (upvoted) the paper",
-    source: "Hugging Face Daily Papers",
-  },
-  {
-    key: "auth",
-    name: "Author seniority",
-    what: "The highest h-index among the authors — how often their work is cited",
-    source: "Semantic Scholar",
-  },
-  {
-    key: "code",
-    name: "Code released",
-    what: "Whether the authors published their code on GitHub, so others can check and reuse the results",
-    source: "arXiv comments, Hugging Face or Semantic Scholar",
-  },
-] as const;
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
   return (
-    <section className="card p-5">
-      <h2 className="text-lg font-semibold text-brand">{title}</h2>
-      <div className="mt-2 text-[15px] leading-relaxed">{children}</div>
+    <section className="card">
+      <h2 className="h3 flex items-center gap-3">
+        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-primary font-display text-[14px] font-extrabold text-white">
+          {n}
+        </span>
+        {title}
+      </h2>
+      <div className="mt-4 text-[15px] leading-6 text-body">{children}</div>
     </section>
+  );
+}
+
+function Lookup({ title, formula, rows }: { title: string; formula: string; rows: [string, string][] }) {
+  return (
+    <div className="panel p-4">
+      <p className="font-display text-[14px] font-bold text-heading">{title}</p>
+      <p className="text-[12px] text-muted-text">{formula}</p>
+      <ul className="mt-2 divide-y divide-divider">
+        {rows.map(([k, v]) => (
+          <li key={k} className="flex justify-between py-1.5 text-[14px]">
+            <span>{k}</span>
+            <span className="font-display font-bold text-heading font-tabular">{v}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -62,218 +49,151 @@ export default async function ScoringPage() {
     { significance: 8, significanceReasons: [], relevance: 9, upvotes: 15, maxHIndex: 40, hasCode: true, watch: [], usefulAuthorBoost: false },
     style,
   );
-  const w = STYLES[style].weights;
+  const weights = Object.fromEntries((Object.keys(STYLES) as RankingStyle[]).map((s) => [s, STYLES[s].weights])) as Record<
+    RankingStyle,
+    (typeof STYLES)["balanced"]["weights"]
+  >;
+  const delta = STYLES[style].thresholdDelta;
 
   return (
-    <div className="mx-auto flex max-w-[860px] flex-col gap-5">
-      <div>
-        <h1 className="text-2xl font-bold">How papers are scored</h1>
-        <p className="text-sm text-muted">
-          The rules used to decide which papers make it into the brief. Every paper gets a score from 0 to 10.
-          Your current style is <strong>{STYLE_NAMES[style]}</strong> and the pass mark is <strong>{threshold.toFixed(1)}</strong> — change both in{" "}
-          <Link href="/settings" className="text-brand underline">
-            Settings
-          </Link>
-          .
-        </p>
-      </div>
+    <div className="mx-auto flex max-w-[880px] flex-col gap-6">
+      <PageHeader
+        title="How papers are scored"
+        description={`Every paper gets a score from 0 to 10. Your style is ${STYLE_NAMES[style]} and your pass mark is ${threshold.toFixed(1)} — change both in Settings.`}
+      />
 
-      <Section title="1. The five ingredients">
-        <p>
-          Each ingredient becomes a number from 0 to 10, then is multiplied by its weight.
-          <InfoTip text="Weight = the ingredient's share of the final score. The weights change with the ranking style chosen in Settings." align="left" />
-        </p>
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <th className="py-2 pr-3">Ingredient</th>
-                <th className="py-2 pr-3">What it measures</th>
-                {(Object.keys(STYLES) as RankingStyle[]).map((s) => (
-                  <th key={s} className={`py-2 pr-2 text-right ${s === style ? "text-brand" : ""}`}>
-                    {STYLE_NAMES[s]}
-                    {s === style && <span className="block text-[10px] normal-case">your setting</span>}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {INGREDIENTS.map((ing) => (
-                <tr key={ing.key} className="border-b border-line align-top last:border-0">
-                  <td className="py-2 pr-3 font-medium">{ing.name}</td>
-                  <td className="py-2 pr-3 text-[#38443d]">
-                    {ing.what}
-                    <span className="block text-xs text-muted">Source: {ing.source}</span>
-                  </td>
-                  {(Object.keys(STYLES) as RankingStyle[]).map((s) => (
-                    <td key={s} className={`py-2 pr-2 text-right font-mono ${s === style ? "font-bold text-brand" : "text-muted"}`}>
-                      {Math.round(STYLES[s].weights[ing.key] * 100)}%
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <Section n={1} title="The five ingredients">
+        <p className="mb-4">Each ingredient becomes a number from 0 to 10, then counts for its share of the score.</p>
+        <ScoringIngredients weights={weights} current={style} />
+      </Section>
+
+      <Section n={2} title="Bonus points">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3 rounded-panel bg-primary-tint px-4 py-3">
+            <span className="font-display text-[18px] font-extrabold text-primary-hover">+1.5</span>
+            <span className="text-heading">Matches your watch-list — an author, lab or term you follow</span>
+          </div>
+          <div className="flex items-center gap-3 rounded-panel bg-teal/10 px-4 py-3">
+            <span className="font-display text-[18px] font-extrabold text-teal-ink">+0.5</span>
+            <span className="text-heading">By an author whose papers you marked useful before</span>
+          </div>
+          <p className="text-[13px] text-muted-text">The final score is capped at 10.</p>
         </div>
       </Section>
 
-      <Section title="2. Bonus points">
-        <ul className="list-disc space-y-1 pl-5">
-          <li>
-            <strong>+1.5 Watch-list match</strong> — an author, lab or term from your follow list in Settings appears in the paper
-          </li>
-          <li>
-            <strong>+0.5 Author you liked</strong> — you marked 2 or more of their papers “Read in full” or “Bring to client”
-          </li>
-          <li>The final score is capped at 10.</li>
+      <Section n={3} title="Raw numbers → 0–10">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Lookup
+            title="Community buzz"
+            formula="2 × log₂(1 + upvotes) — early likes count most"
+            rows={[0, 1, 3, 7, 15, 31].map((u) => [`${u === 31 ? "31+" : u} upvotes`, `${normCommunity(u).toFixed(0)}/10`])}
+          />
+          <Lookup
+            title="Author seniority"
+            formula="h-index ÷ 8 — h-index = how often a researcher's work is cited"
+            rows={[0, 8, 20, 40, 60, 80].map((h) => [`h-index ${h === 80 ? "80+" : h}`, `${normAuthor(h).toFixed(1)}/10`])}
+          />
+        </div>
+        <p className="mt-3 text-[14px]">Significance and Relevance come straight from Gemini (0–10). Code released is 10 if code is available, otherwise 0.</p>
+      </Section>
+
+      <Section n={4} title="Worked example">
+        <p className="text-[14px] text-muted-text">Significance 8, relevance 9, 15 upvotes, an author with h-index 40, and released code:</p>
+        <ul className="mt-3 divide-y divide-divider">
+          {INGREDIENTS.map((i) => {
+            const c = example.breakdown.components[i.key];
+            return (
+              <li key={i.key} className="flex items-center gap-3 py-2 text-[14px]">
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: i.color }} />
+                <span className="flex-1 text-heading">{i.name}</span>
+                <span className="text-muted-text font-tabular">
+                  {c.value.toFixed(1)} × {Math.round(c.weight * 100)}%
+                </span>
+                <span className="w-14 text-right font-display font-bold text-heading font-tabular">= {c.contribution.toFixed(2)}</span>
+              </li>
+            );
+          })}
         </ul>
-      </Section>
-
-      <Section title="3. How raw numbers become 0–10">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <p className="font-medium">Community buzz (upvotes)</p>
-            <p className="text-xs text-muted">Formula: 2 × log₂(1 + upvotes), max 10 — early likes count most</p>
-            <table className="mt-2 w-full text-sm">
-              <tbody>
-                {[0, 1, 3, 7, 15, 31].map((u) => (
-                  <tr key={u} className="border-b border-line last:border-0">
-                    <td className="py-1">{u === 31 ? "31 or more" : u} upvotes</td>
-                    <td className="py-1 text-right font-mono">{normCommunity(u).toFixed(0)} / 10</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div>
-            <p className="font-medium">Author seniority (h-index)</p>
-            <p className="text-xs text-muted">Formula: h-index ÷ 8, max 10 — an h-index of 40 means 40 papers each cited 40+ times</p>
-            <table className="mt-2 w-full text-sm">
-              <tbody>
-                {[0, 8, 20, 40, 60, 80].map((h) => (
-                  <tr key={h} className="border-b border-line last:border-0">
-                    <td className="py-1">h-index {h === 80 ? "80 or more" : h}</td>
-                    <td className="py-1 text-right font-mono">{normAuthor(h).toFixed(1)} / 10</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-panel bg-panel px-4 py-3">
+          <span className="font-display text-[15px] font-bold text-heading">Final score</span>
+          <span className="font-display text-[24px] font-extrabold text-primary-hover font-tabular">
+            {example.final.toFixed(2)}
+            <span className="text-[14px] text-muted-text">/10</span>
+          </span>
+          {example.final >= threshold ? (
+            <span className="pill ml-auto bg-success/12 text-success-ink">
+              <CircleCheck size={13} /> Above pass mark {threshold.toFixed(1)}
+            </span>
+          ) : (
+            <span className="pill ml-auto bg-error/10 text-error-ink">Below pass mark {threshold.toFixed(1)}</span>
+          )}
         </div>
-        <p className="mt-3 text-sm">
-          <strong>Significance</strong> and <strong>Relevance</strong> come straight from Gemini (0–10). <strong>Code released</strong> is 10 if code
-          is available, otherwise 0.
-        </p>
       </Section>
 
-      <Section title="4. Worked example">
-        <p className="text-sm text-muted">A paper with significance 8, relevance 9, 15 upvotes, an author with h-index 40 and released code:</p>
-        <table className="mt-2 w-full text-sm">
-          <tbody>
-            {INGREDIENTS.map((ing) => {
-              const c = example.breakdown.components[ing.key];
-              return (
-                <tr key={ing.key} className="border-b border-line">
-                  <td className="py-1">{ing.name}</td>
-                  <td className="py-1 text-right font-mono text-muted">
-                    {c.value.toFixed(1)} × {Math.round(w[ing.key] * 100)}%
-                  </td>
-                  <td className="py-1 text-right font-mono">= {c.contribution.toFixed(2)}</td>
-                </tr>
-              );
-            })}
-            <tr>
-              <td className="py-1 font-semibold">Final score</td>
-              <td />
-              <td className="py-1 text-right font-mono font-bold text-brand">{example.final.toFixed(2)} / 10</td>
-            </tr>
-          </tbody>
-        </table>
-        <p className="mt-2 text-sm">
-          {example.final >= threshold ? "✅ Above" : "❌ Below"} your pass mark of {threshold.toFixed(1)}, so it{" "}
-          {example.final >= threshold ? "would be included" : "would not be included"}.
-        </p>
-      </Section>
-
-      <Section title="5. Who makes it into the brief">
-        <ol className="list-decimal space-y-1.5 pl-5">
-          <li>
-            <strong>Shortlist:</strong> Gemini rates every new paper&apos;s relevance. Only papers scoring <strong>6 or more</strong> go forward, and at most
-            the <strong>top 10 per topic</strong> get a full write-up.
-          </li>
-          <li>
-            <strong>Pass mark:</strong> the final score must be at least <strong>{threshold.toFixed(1)}</strong>
-            <InfoTip
-              text={`Your threshold of ${settings.significance_threshold}${
-                STYLES[style].thresholdDelta !== 0
-                  ? `, ${STYLES[style].thresholdDelta > 0 ? "plus" : "minus"} ${Math.abs(STYLES[style].thresholdDelta)} for the ${STYLE_NAMES[style]} style`
-                  : ""
-              }.`}
-            />
-            .
-          </li>
-          <li>
-            <strong>Slots per topic:</strong> up to {STYLES[style].slots(settings.papers_per_domain)} papers. High-priority topics get 1 extra slot;
-            low-priority topics get 1 fewer.
-          </li>
-          <li>
-            <strong>No repeats:</strong> a paper that fits two topics appears once, under the topic where it scored highest. Papers already sent, or marked “Not useful”, never appear again.
-          </li>
-          <li>
-            <strong>Reading-time cap:</strong> if the brief is longer than {settings.reading_minutes} minutes to read, the
-            lowest-scoring papers from low-priority topics are dropped first — every topic keeps at least one paper.
-          </li>
-          <li>
-            <strong>Quiet week:</strong> if nothing in a topic reaches the pass mark, the brief says so and shows the best candidate under “Closest
-            miss”.
-          </li>
+      <Section n={5} title="Who makes it into the brief">
+        <ol className="flex flex-col gap-3">
+          {[
+            ["Shortlist", "Gemini rates every new paper's relevance. Only papers scoring 6 or more go forward, and at most the top 10 per topic get a full write-up."],
+            [
+              "Pass mark",
+              `The final score must be at least ${threshold.toFixed(1)}${delta ? ` (your threshold of ${settings.significance_threshold} ${delta > 0 ? "+" : "−"} ${Math.abs(delta)} for ${STYLE_NAMES[style]})` : ""}.`,
+            ],
+            ["Slots per topic", `Up to ${STYLES[style].slots(settings.papers_per_domain)} papers. High-priority topics get 1 extra; low-priority topics get 1 fewer.`],
+            ["No repeats", "A paper that fits two topics appears once, under the topic where it scored highest. Papers already sent, or marked “Not useful”, never appear again."],
+            ["Reading-time cap", `If the brief would take longer than ${settings.reading_minutes} minutes, the lowest-scoring papers from low-priority topics are dropped first — every topic keeps at least one.`],
+            ["Quiet week", "If nothing in a topic reaches the pass mark, the brief says so and shows the closest miss."],
+          ].map(([t, d], i) => (
+            <li key={t} className="flex gap-3">
+              <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-primary font-display text-[13px] font-extrabold text-white">
+                {i + 1}
+              </span>
+              <span>
+                <strong className="font-display font-bold text-heading">{t}.</strong> {d}
+              </span>
+            </li>
+          ))}
         </ol>
       </Section>
 
-      <Section title="6. Verdict labels">
-        <ul className="space-y-1.5">
-          <li>
-            <span className="mr-2 rounded bg-blue-600 px-1.5 py-0.5 text-[11px] font-bold text-white">READ</span>worth reading in full yourself
+      <Section n={6} title="Verdict labels">
+        <ul className="flex flex-col gap-2.5">
+          <li className="flex items-center gap-3">
+            <VerdictBadge verdict="READ" /> Worth reading in full yourself
           </li>
-          <li>
-            <span className="mr-2 rounded bg-green-700 px-1.5 py-0.5 text-[11px] font-bold text-white">CLIENT</span>worth bringing up with a client
+          <li className="flex items-center gap-3">
+            <VerdictBadge verdict="CLIENT" /> Worth bringing up with a client
           </li>
-          <li>
-            <span className="mr-2 rounded bg-gray-200 px-1.5 py-0.5 text-[11px] font-bold text-gray-700">FYI</span>for your information — good to know, no action needed
+          <li className="flex items-center gap-3">
+            <VerdictBadge verdict="FYI" /> For your information — good to know
           </li>
         </ul>
-        <p className="mt-2 text-sm text-muted">Gemini chooses the verdict. It is advice only and does not change the score.</p>
+        <p className="mt-3 text-[13px] text-muted-text">Gemini chooses the verdict. It is advice only and does not change the score.</p>
       </Section>
 
-      <Section title="7. If the AI is unavailable">
-        <p>
-          If Gemini does not respond, the brief is still sent. Papers are ranked on the remaining signals only:{" "}
-          {Math.round(FALLBACK_WEIGHTS.rel * 100)}% keyword match, {Math.round(FALLBACK_WEIGHTS.comm * 100)}%
-          community buzz, {Math.round(FALLBACK_WEIGHTS.auth * 100)}% author seniority and {Math.round(FALLBACK_WEIGHTS.code * 100)}% code released. Cards
-          then show the paper&apos;s own summary with an “AI summary unavailable” tag. If Semantic Scholar or Hugging Face is down, that ingredient&apos;s
-          weight is shared out among the others.
+      <Section n={7} title="If the AI is unavailable">
+        <p className="mb-3">The brief is still sent. Papers are ranked on the remaining signals, and cards show the paper&apos;s own abstract.</p>
+        <StackedBar weights={{ rel: FALLBACK_WEIGHTS.rel, comm: FALLBACK_WEIGHTS.comm, auth: FALLBACK_WEIGHTS.auth, code: FALLBACK_WEIGHTS.code }} />
+        <p className="mt-2 text-[13px] text-muted-text">
+          Relevance here comes from keyword matches. If Semantic Scholar or Hugging Face is down, its share is spread across the others.
         </p>
       </Section>
 
-      <Section title="8. “Why ranked” chips on each paper">
-        <ul className="list-disc space-y-1 pl-5 text-sm">
-          <li>Short phrases from Gemini — the reasons it gave for the significance score</li>
-          <li>
-            <strong>Senior authors (h-index N)</strong> — at least one author has an h-index of 30 or more
-          </li>
-          <li>
-            <strong>N upvotes</strong> — Hugging Face community likes
-          </li>
-          <li>
-            <strong>Code released</strong> — the authors shared their code
-          </li>
-          <li>
-            <strong>Watch-list: X</strong> — matched your follow list (+1.5)
-          </li>
-          <li>
-            <strong>You found this author useful</strong> — based on your feedback (+0.5)
-          </li>
-        </ul>
+      <Section n={8} title="“Why ranked” chips">
+        <div className="grid gap-3 sm:grid-cols-2">
+          {[
+            ["bg-hover text-body", "unifies RAG and long-context", "The AI's reasons for the significance score"],
+            ["bg-sky/12 text-sky-ink", "Senior authors (h-index 44)", "An author has an h-index of 30 or more"],
+            ["bg-pink/12 text-pink-ink", "24 upvotes", "Hugging Face community likes"],
+            ["bg-lime/14 text-lime-ink", "Code released", "The authors shared their code"],
+            ["bg-primary-tint text-primary-pressed", "Watch-list: OpenAI", "Matched your follow list (+1.5)"],
+            ["bg-amber/14 text-amber-ink", "You found this author useful", "Based on your feedback (+0.5)"],
+          ].map(([cls, chip, meaning]) => (
+            <div key={chip} className="panel px-4 py-3">
+              <span className={`inline-block rounded-full px-2.5 py-1 text-[12px] font-medium ${cls}`}>{chip}</span>
+              <p className="mt-1.5 text-[13px] text-muted-text">{meaning}</p>
+            </div>
+          ))}
+        </div>
       </Section>
     </div>
   );

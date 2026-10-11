@@ -60,3 +60,29 @@ export const TIPS = {
   closestMiss: "The best paper in this topic that scored just below your pass mark.",
   alsoRelevant: "This paper fits more than one topic. It is shown once, under the topic where it scored highest.",
 };
+
+/** arXiv categories grouped for the category picker (plain-English label first, code second). */
+export const CATEGORY_GROUPS: { label: string; items: [string, string][] }[] = [
+  {
+    label: "Language & knowledge",
+    items: [["cs.CL", "Language AI"], ["cs.IR", "Search & Retrieval"], ["cs.DL", "Digital libraries"], ["cs.HC", "Human–computer interaction"], ["cs.SD", "Sound"], ["eess.AS", "Audio & speech"]],
+  },
+  {
+    label: "Learning & reasoning",
+    items: [["cs.AI", "Artificial Intelligence"], ["cs.LG", "Machine learning"], ["stat.ML", "Statistical ML"], ["cs.NE", "Neural & evolutionary"], ["cs.MA", "Multi-agent systems"], ["cs.LO", "Logic"], ["q-bio.QM", "Quantitative biology"]],
+  },
+  {
+    label: "Vision & robotics",
+    items: [["cs.CV", "Computer Vision"], ["cs.RO", "Robotics"], ["eess.IV", "Image & video"], ["cs.GR", "Graphics"], ["eess.SP", "Signal processing"]],
+  },
+  {
+    label: "Software & systems",
+    items: [["cs.SE", "Software engineering"], ["cs.PL", "Programming languages"], ["cs.DC", "Distributed computing"], ["cs.DB", "Databases"], ["cs.CR", "Security"], ["cs.AR", "Hardware"], ["cs.PF", "Performance"], ["eess.SY", "Control systems"]],
+  },
+  {
+    label: "Society & business",
+    items: [["cs.CY", "Computers & society"], ["cs.SI", "Social networks"], ["cs.GT", "Game theory"], ["econ.GN", "Economics"], ["q-fin.CP", "Computational finance"]],
+  },
+];
+
+for (const g of CATEGORY_GROUPS) for (const [code, label] of g.items) CATEGORY_LABELS[code] ??= label;

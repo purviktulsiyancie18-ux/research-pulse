@@ -1,10 +1,9 @@
-import Link from "next/link";
-import { RetryDomainButton } from "@/components/RetryDomainButton";
+import { InfoTip } from "@/components/InfoTip";
+import { RunsList, type RunItem } from "@/components/RunsList";
+import { PageHeader } from "@/components/ui";
 import { fmtDate } from "@/lib/brief";
 import { q } from "@/lib/db";
 import { getDomains } from "@/lib/repo";
-import { PROGRESS_LABELS } from "@/lib/glossary";
-import { InfoTip } from "@/components/InfoTip";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +17,6 @@ type RunRow = {
   progress: Record<string, string>;
   stats: {
     scanned?: number;
-    kept?: number;
     surfaced?: number;
     gemini_calls?: number;
     arxiv_requests?: number;
@@ -32,106 +30,46 @@ type RunRow = {
   started_at: string;
 };
 
-const STATUS: Record<string, string> = {
-  succeeded: "bg-green-100 text-green-800",
-  partial: "bg-amber-100 text-amber-800",
-  failed: "bg-red-100 text-red-800",
-  running: "bg-blue-100 text-blue-800",
-  queued: "bg-gray-100 text-gray-700",
-  skipped: "bg-gray-100 text-gray-700",
-};
-
-const MODE: Record<string, string> = {
-  since_last_brief: "Since last brief",
-  last_n_days: "Last N days",
-  custom: "Custom dates",
-};
+const MODE: Record<string, string> = { since_last_brief: "Since last brief", last_n_days: "Last N days", custom: "Custom dates" };
+const sourceState = (v: boolean | null | undefined) => (v === false ? "unavailable" : v ? "ok" : "off");
 
 export default async function RunsPage() {
-  const [runs, domains] = await Promise.all([
-    q<RunRow>("select * from runs order by started_at desc limit 50"),
-    getDomains(),
-  ]);
-  const name = (id: string) => domains.find((d) => String(d.id) === id)?.name ?? `Domain ${id} (deleted)`;
+  const [rows, domains] = await Promise.all([q<RunRow>("select * from runs order by started_at desc limit 50"), getDomains({ includeArchived: true })]);
+  const name = (id: string) => domains.find((d) => String(d.id) === id)?.name ?? `Domain ${id}`;
+
+  const runs: RunItem[] = rows.map((r) => {
+    const s = r.stats ?? {};
+    return {
+      id: r.id,
+      status: r.status,
+      started: `${new Date(r.started_at).toLocaleString("en-GB", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} IST`,
+      trigger: r.trigger === "cron" ? "Weekly (automatic)" : "Manual",
+      mode: MODE[r.mode] ?? r.mode,
+      window: `${fmtDate(r.window_start, { day: "numeric", month: "short" })} – ${fmtDate(r.window_end, { day: "numeric", month: "short" })}`,
+      summary: `${s.duration_ms ? `${Math.round(s.duration_ms / 1000)}s` : "—"} · ${s.scanned ?? 0} scanned · ${s.surfaced ?? 0} included · ${s.gemini_calls ?? 0} AI calls`,
+      error: r.error,
+      briefId: r.brief_id,
+      footer: `arXiv requests: ${s.arxiv_requests ?? 0} · Author data: ${sourceState(s.s2_ok)} · Community likes: ${sourceState(s.hf_ok)}`,
+      topics: Object.entries(r.progress ?? {}).map(([id, st]) => {
+        const pd = s.per_domain?.[id];
+        return { id: Number(id), name: name(id), status: st, detail: pd ? `${pd.scanned} scanned · ${pd.surfaced} included` : "", error: pd?.error };
+      }),
+    };
+  });
 
   return (
-    <div className="mx-auto max-w-[900px]">
-      <h1 className="text-2xl font-bold">Run history</h1>
-      <p className="text-sm text-muted">
-        Every attempt to build a brief. Click a row for details; failed topics can be retried.
-        <InfoTip
-          text="SUCCEEDED = everything worked · PARTIAL = some topics failed but a brief was made · FAILED = nothing worked · SKIPPED = Monday run skipped because delivery is paused."
-          align="left"
-        />
-      </p>
-      {runs.length === 0 && <p className="mt-6 text-sm text-muted">No runs yet.</p>}
-      <ul className="mt-4 flex flex-col gap-2">
-        {runs.map((r) => {
-          const started = new Date(r.started_at).toLocaleString("en-GB", {
-            timeZone: "Asia/Kolkata",
-            day: "numeric",
-            month: "short",
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-          return (
-            <li key={r.id} className="card">
-              <details>
-                <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-sm">
-                  <span className={`rounded px-1.5 py-0.5 text-[11px] font-bold uppercase ${STATUS[r.status] ?? ""}`}>{r.status}</span>
-                  <span className="font-medium">{started} IST</span>
-                  <span className="text-muted">
-                    {r.trigger === "cron" ? "Weekly (automatic)" : "Manual"} · {MODE[r.mode]}
-                  </span>
-                  <span className="text-muted">
-                    {fmtDate(r.window_start, { day: "numeric", month: "short" })} – {fmtDate(r.window_end, { day: "numeric", month: "short" })}
-                  </span>
-                  <span className="ml-auto font-mono text-xs text-muted">
-                    {r.stats?.duration_ms ? `${Math.round(r.stats.duration_ms / 1000)}s` : "—"} · {r.stats?.scanned ?? 0} scanned ·{" "}
-                    {r.stats?.surfaced ?? 0} included · {r.stats?.gemini_calls ?? 0} AI calls
-                  </span>
-                </summary>
-                <div className="border-t border-line px-4 py-3 text-sm">
-                  {r.error && <p className="mb-2 text-red-700">{r.error}</p>}
-                  <table className="w-full">
-                    <tbody>
-                      {Object.entries(r.progress ?? {}).map(([id, st]) => {
-                        const pd = r.stats?.per_domain?.[id];
-                        return (
-                          <tr key={id} className="border-b border-line last:border-0">
-                            <td className="py-1.5">{name(id)}</td>
-                            <td className="py-1.5 text-xs">{PROGRESS_LABELS[st] ?? st}</td>
-                            <td className="py-1.5 text-right font-mono text-xs text-muted">
-                              {pd ? `${pd.scanned} scanned · ${pd.surfaced} included` : ""}
-                              {pd?.error && <span className="ml-2 text-red-700">{pd.error}</span>}
-                            </td>
-                            <td className="py-1.5 text-right">
-                              {(st === "failed" || st === "skipped") && r.brief_id && <RetryDomainButton runId={r.id} domainId={Number(id)} />}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                  <p className="mt-2 text-xs text-muted">
-                    arXiv requests: {r.stats?.arxiv_requests ?? 0} · Author data:{" "}
-                    {r.stats?.s2_ok === false ? "unavailable" : r.stats?.s2_ok ? "ok" : "off"} · Community likes:{" "}
-                    {r.stats?.hf_ok === false ? "unavailable" : r.stats?.hf_ok ? "ok" : "off"}
-                    {r.brief_id && (
-                      <>
-                        {" · "}
-                        <Link href={`/briefs/${r.brief_id}`} className="text-brand hover:underline">
-                          Open brief
-                        </Link>
-                      </>
-                    )}
-                  </p>
-                </div>
-              </details>
-            </li>
-          );
-        })}
-      </ul>
+    <div className="mx-auto flex max-w-[960px] flex-col gap-6">
+      <PageHeader
+        title="Run history"
+        tip={
+          <InfoTip
+            text="SUCCEEDED = everything worked · PARTIAL = some topics failed but a brief was made · FAILED = nothing worked · SKIPPED = Monday run skipped because delivery is paused."
+            align="left"
+          />
+        }
+        description="Every attempt to build a brief. Open a run to see each topic; failed topics can be retried."
+      />
+      <RunsList runs={runs} />
     </div>
   );
 }

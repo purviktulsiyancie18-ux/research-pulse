@@ -1,5 +1,8 @@
+import { Briefcase, Star } from "lucide-react";
 import Link from "next/link";
 import { FeedbackControls } from "@/components/FeedbackControls";
+import { PageHeader, VerdictBadge } from "@/components/ui";
+import { accentFor } from "@/lib/accents";
 import { PROMPT_VERSION } from "@/lib/analysis";
 import { authorLine, fmtDate } from "@/lib/brief";
 import { q } from "@/lib/db";
@@ -15,7 +18,6 @@ type Row = {
   starred: boolean;
   note: string | null;
   client_tag: string | null;
-  updated_at: string;
   title: string;
   abs_url: string;
   authors: Author[];
@@ -28,73 +30,100 @@ type Row = {
 export default async function LibraryPage({ searchParams }: PageProps<"/library">) {
   const sp = await searchParams;
   const tag = typeof sp.tag === "string" ? sp.tag : "";
-  const rows = await q<Row>(
-    `select f.arxiv_id, f.domain_id, f.brief_id, f.verdict, f.starred, f.note, f.client_tag, f.updated_at,
+  const all = await q<Row>(
+    `select f.arxiv_id, f.domain_id, f.brief_id, f.verdict, f.starred, f.note, f.client_tag,
             p.title, p.abs_url, p.authors, p.published_at, d.name as domain_name, pa.summary, pa.client_angle
      from feedback f
      join papers p on p.arxiv_id = f.arxiv_id
      join domains d on d.id = f.domain_id
      left join paper_analysis pa on pa.arxiv_id = f.arxiv_id and pa.domain_id = f.domain_id and pa.prompt_version = $1
-     where (f.starred or f.verdict = 'client') and ($2 = '' or f.client_tag = $2)
+     where f.starred or f.verdict = 'client'
      order by f.updated_at desc`,
-    [PROMPT_VERSION, tag],
+    [PROMPT_VERSION],
   );
-  const tags = [...new Set((await q<{ client_tag: string }>("select distinct client_tag from feedback where client_tag is not null and client_tag <> ''")).map((r) => r.client_tag))];
+  const rows = tag ? all.filter((r) => r.client_tag === tag) : all;
+  const tags = new Map<string, number>();
+  for (const r of all) if (r.client_tag) tags.set(r.client_tag, (tags.get(r.client_tag) ?? 0) + 1);
 
   return (
-    <div className="mx-auto max-w-[760px]">
-      <h1 className="text-2xl font-bold">Library</h1>
-      <p className="text-sm text-muted">Papers you starred or marked “Bring to client”, with your notes. Click a tag to filter by client.</p>
-
-      {tags.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1.5 text-xs">
-          <Link href="/library" className={`rounded-full border px-2.5 py-1 ${!tag ? "border-brand bg-brand text-white" : "border-line"}`}>
-            All
-          </Link>
-          {tags.map((t) => (
-            <Link
-              key={t}
-              href={`/library?tag=${encodeURIComponent(t)}`}
-              className={`rounded-full border px-2.5 py-1 ${tag === t ? "border-brand bg-brand text-white" : "border-line"}`}
-            >
-              {t}
-            </Link>
-          ))}
-        </div>
-      )}
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Library"
+        description="Papers you starred or marked “Bring to client”, with your notes."
+        wash="linear-gradient(135deg, rgba(20,184,166,0.07), #FFFFFF 50%, rgba(245,158,11,0.06))"
+      >
+        {tags.size > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {[["", all.length] as const, ...[...tags.entries()]].map(([t, n]) => {
+              const on = tag === t;
+              return (
+                <Link
+                  key={t || "all"}
+                  href={t ? `/library?tag=${encodeURIComponent(t)}` : "/library"}
+                  className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3.5 font-display text-[13px] font-semibold transition ${
+                    on ? "border-primary bg-primary text-white" : "border-line-strong bg-surface text-body hover:text-heading"
+                  }`}
+                >
+                  {t || "All"}
+                  <span className={`text-[11px] font-tabular ${on ? "text-white/80" : "text-muted-text"}`}>{n}</span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </PageHeader>
 
       {rows.length === 0 ? (
-        <p className="mt-6 text-sm text-muted">Nothing here yet. Star a paper or mark it “Bring to client” in a brief.</p>
+        <div className="card flex flex-col items-center py-14 text-center">
+          <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-amber/14 text-amber-ink">
+            <Star size={26} />
+          </span>
+          <p className="h2 mt-4">Nothing here yet</p>
+          <p className="mt-1 text-[15px] text-body">Star a paper or mark it “Bring to client” in a brief.</p>
+          <Link href="/" className="btn btn-secondary mt-5">
+            Open this week&apos;s brief
+          </Link>
+        </div>
       ) : (
-        <ul className="mt-4 flex flex-col gap-3">
-          {rows.map((r) => (
-            <li key={`${r.arxiv_id}-${r.domain_id}`} className="card p-4">
-              <div className="flex flex-wrap gap-2 text-xs text-muted">
-                <span className="font-medium text-brand">{r.domain_name}</span>
-                <span>· {fmtDate(r.published_at)}</span>
-                {r.starred && <span className="text-amber-600">★</span>}
-                {r.verdict === "client" && <span className="rounded bg-green-700 px-1.5 text-white">CLIENT</span>}
-                {r.client_tag && <span className="rounded bg-brand-soft px-1.5 text-brand">{r.client_tag}</span>}
-              </div>
-              <a href={r.abs_url} target="_blank" rel="noreferrer" className="mt-1 block font-semibold hover:text-brand hover:underline">
-                {r.title}
-              </a>
-              <p className="text-xs text-muted">{authorLine(r.authors)}</p>
-              {r.summary && <p className="mt-1.5 text-sm">{r.summary}</p>}
-              {r.client_angle && (
-                <p className="mt-1 text-sm">
-                  <span className="font-semibold">Client angle:</span> {r.client_angle}
-                </p>
-              )}
-              <FeedbackControls
-                arxivId={r.arxiv_id}
-                domainId={r.domain_id}
-                briefId={r.brief_id}
-                initial={{ verdict: r.verdict, starred: r.starred, note: r.note, clientTag: r.client_tag }}
-              />
-            </li>
-          ))}
-        </ul>
+        <div className="grid gap-6" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 400px), 1fr))" }}>
+          {rows.map((r) => {
+            const a = accentFor(r.domain_id);
+            return (
+              <article key={`${r.arxiv_id}-${r.domain_id}`} className="card flex flex-col">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="pill" style={{ background: a.tint, color: a.ink }}>
+                    {r.domain_name}
+                  </span>
+                  {r.verdict === "client" && <VerdictBadge verdict="CLIENT" />}
+                  {r.client_tag && <span className="pill border border-teal/40 bg-surface text-teal-ink">{r.client_tag}</span>}
+                  <span className="ml-auto text-[12px] text-muted-text">{fmtDate(r.published_at)}</span>
+                </div>
+                <a href={r.abs_url} target="_blank" rel="noreferrer" className="mt-3 block font-display text-[18px] leading-[26px] font-bold text-heading hover:text-primary-hover">
+                  {r.title}
+                </a>
+                <p className="mt-1 text-[13px] text-muted-text">{authorLine(r.authors)}</p>
+                {r.summary && <p className="mt-2 text-[15px] leading-6 text-body">{r.summary}</p>}
+                {r.client_angle && (
+                  <div className="mt-3 rounded-panel border border-teal/28 bg-teal/7 px-4 py-3">
+                    <p className="eyebrow flex items-center gap-1.5 text-teal-ink">
+                      <Briefcase size={13} strokeWidth={2.5} /> Client angle
+                    </p>
+                    <p className="mt-1 text-[14px] leading-[22px] font-medium text-heading">{r.client_angle}</p>
+                  </div>
+                )}
+                <div className="mt-auto">
+                  <FeedbackControls
+                    variant="library"
+                    arxivId={r.arxiv_id}
+                    domainId={r.domain_id}
+                    briefId={r.brief_id}
+                    initial={{ verdict: r.verdict, starred: r.starred, note: r.note, clientTag: r.client_tag }}
+                  />
+                </div>
+              </article>
+            );
+          })}
+        </div>
       )}
     </div>
   );

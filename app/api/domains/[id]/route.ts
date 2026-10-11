@@ -24,7 +24,7 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/domains/[id]">
   if (!fields.length) return jsonError("Nothing to update", 400);
   const sets = fields.map((c, i) => `${c} = $${i + 2}`).join(", ");
   try {
-    const row = await q1(`update domains set ${sets}, updated_at = now() where id = $1 returning *`, [
+    const row = await q1(`update domains set ${sets}, updated_at = now() where id = $1 and not archived returning *`, [
       id,
       ...fields.map((c) => sent[c]),
     ]);
@@ -41,7 +41,8 @@ export async function DELETE(_req: Request, ctx: RouteContext<"/api/domains/[id]
   if (denied) return denied;
   const id = Number((await ctx.params).id);
   if (!Number.isInteger(id)) return jsonError("Domain not found", 404);
-  const rows = await q("delete from domains where id = $1 returning id", [id]);
+  // Archive rather than delete, so past briefs keep their papers and topic names.
+  const rows = await q("update domains set archived = true, active = false, updated_at = now() where id = $1 and not archived returning id", [id]);
   if (!rows.length) return jsonError("Domain not found", 404);
   return NextResponse.json({ ok: true });
 }

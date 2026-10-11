@@ -2,6 +2,8 @@
 
 A weekly AI-research brief for Kavita, a senior consultant who advises clients on AI strategy. Every Monday before 7:00 AM IST it scans her monitored domains on arXiv, adds significance signals from Semantic Scholar and Hugging Face, has **Gemini Flash** triage and summarise the papers, ranks them, and emails a brief she can read in under 10 minutes. The same brief is on the web, where she marks each paper *Read in full*, *Bring to client* or *Not useful*. That feedback shapes the next week's ranking.
 
+**Design:** light, blue-led "research newsletter" look from the Claude Design handoff — Plus Jakarta Sans + Inter, tokens in `app/globals.css`, icons from Lucide, logo in `public/rp-mark.png`.
+
 **Stack:** Next.js 16 (App Router, TypeScript) · Tailwind · Neon Postgres · Google Gemini Flash (`@google/genai`) · Resend · Vercel Cron. Everything runs on free tiers. Gemini is the only AI used; there is no Claude/Anthropic API anywhere in the code.
 
 ![Components Map](docs/Research_Pulse_Components_Map.png)
@@ -98,5 +100,5 @@ On the Hobby plan, cron schedules are fixed at deploy time and run at most once 
 - If a source is unavailable, its ranking weight is shared out among the other signals in proportion to their weights.
 - Thinking is set to `LOW` on Gemini 3.x Flash models so each call stays around 10–20 s.
 - When a domain has nothing above the threshold, the brief shows "Quiet week" with the best candidate collapsed under **Closest miss**. That candidate doesn't count as delivered.
-- Deleting a domain also removes its papers from past briefs. To keep the history, pause the domain instead.
+- Deleting a domain archives it: future briefs skip it, past briefs keep its papers. Adding a domain with the same name later restores it.
 - Cache Components is turned off. Every page reads live data from Neon, so the routes use `dynamic = "force-dynamic"`.

@@ -54,15 +54,23 @@ export function toDomain(r: Row): Domain {
 
 const PRIORITY_ORDER = "case priority when 'high' then 0 when 'normal' then 1 else 2 end";
 
-export async function getDomains(opts: { activeOnly?: boolean } = {}): Promise<Domain[]> {
+/** Domains in priority order. Archived (deleted) domains are hidden unless includeArchived is set. */
+export async function getDomains(opts: { activeOnly?: boolean; includeArchived?: boolean } = {}): Promise<Domain[]> {
+  const where = [opts.includeArchived ? "" : "not archived", opts.activeOnly ? "active" : ""].filter(Boolean);
   const rows = await q<Row>(
-    `select * from domains ${opts.activeOnly ? "where active" : ""} order by ${PRIORITY_ORDER}, name`,
+    `select * from domains ${where.length ? `where ${where.join(" and ")}` : ""} order by ${PRIORITY_ORDER}, name`,
   );
   return rows.map(toDomain);
 }
 
+/** Number of papers in the Library (starred or "bring to client"). */
+export async function libraryCount(): Promise<number> {
+  const r = await q1<{ n: number }>("select count(*)::int as n from feedback where starred or verdict = 'client'");
+  return r?.n ?? 0;
+}
+
 export async function getDomain(id: number): Promise<Domain | null> {
-  const r = await q1<Row>("select * from domains where id = $1", [id]);
+  const r = await q1<Row>("select * from domains where id = $1 and not archived", [id]);
   return r ? toDomain(r) : null;
 }
 

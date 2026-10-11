@@ -1,104 +1,92 @@
 "use client";
 
+import { Check, Copy, FileDown, Mail, RotateCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/client";
-import { TIPS } from "@/lib/glossary";
+import { toast } from "./Toast";
 
-export function BriefActions(props: { briefId: string; status: string; emailedAt: string | null; markdown: string }) {
+export function BriefActions(props: { briefId: string; status: string; emailedAt: string | null; markdown: string; recipient: string | null }) {
   const router = useRouter();
-  const [msg, setMsg] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [confirmResend, setConfirmResend] = useState(false);
 
-  async function act(fn: () => Promise<string>) {
-    setBusy(true);
-    setMsg(null);
+  async function act(key: string, fn: () => Promise<string>) {
+    setBusy(key);
     try {
-      setMsg(await fn());
+      toast(await fn());
       router.refresh();
     } catch (e) {
-      setMsg((e as Error).message);
+      toast((e as Error).message, "error");
     } finally {
-      setBusy(false);
+      setBusy(null);
+      setConfirmResend(false);
     }
   }
 
+  const send = (force: boolean) =>
+    act("send", async () => {
+      const r = await api<{ to: string; alreadySent: boolean }>(`/api/briefs/${props.briefId}/send${force ? "?force=1" : ""}`, { method: "POST" });
+      return r.alreadySent ? "This brief was already emailed" : `Emailed to ${r.to}`;
+    });
+
   return (
-    <div className="no-print flex flex-col items-end gap-1">
-      <div className="flex flex-wrap justify-end gap-1.5">
-        <button className="btn" title="Opens the print window — choose Save as PDF" onClick={() => window.print()}>
-          Export PDF
-        </button>
-        <button
-          className="btn"
-          title="Copies the brief as formatted text for Notion, Google Docs, etc."
-          onClick={async () => {
-            await navigator.clipboard.writeText(props.markdown);
-            setMsg("Markdown copied to clipboard");
-          }}
-        >
-          Copy Markdown
-        </button>
+    <div data-noprint className="mt-5">
+      <div className="flex flex-wrap items-center gap-2">
         {!props.emailedAt && (
-          <button
-            className="btn btn-primary"
-            title="Emails this brief to the recipient in Settings"
-            disabled={busy}
-            onClick={() =>
-              act(async () => {
-                const r = await api<{ to: string; alreadySent: boolean }>(`/api/briefs/${props.briefId}/send`, { method: "POST" });
-                return r.alreadySent ? "Already emailed" : `Emailed to ${r.to}`;
-              })
-            }
-          >
-            {busy ? "Sending…" : "Send email"}
+          <button className="btn btn-primary" disabled={busy !== null} onClick={() => send(false)}>
+            <Mail size={17} /> {busy === "send" ? "Sending…" : "Send email"}
           </button>
         )}
         {props.status === "preview" && (
           <button
-            className="btn"
-            disabled={busy}
-            title="Count this brief as delivered so its papers are not repeated next week"
+            className="btn btn-secondary"
+            disabled={busy !== null}
+            title="Count this brief as sent, so its papers won't repeat next week"
             onClick={() =>
-              act(async () => {
+              act("deliver", async () => {
                 await api(`/api/briefs/${props.briefId}/deliver`, { method: "POST" });
                 return "Marked as delivered";
               })
             }
           >
-            Mark as delivered
+            <Check size={17} /> Mark as delivered
           </button>
         )}
         {props.emailedAt && (
-          <button
-            className="btn"
-            disabled={busy}
-            title="Send another copy of this brief"
-            onClick={() => {
-              if (!confirm("This brief was already emailed. Send another copy?")) return;
-              act(async () => {
-                const r = await api<{ to: string }>(`/api/briefs/${props.briefId}/send?force=1`, { method: "POST" });
-                return `Emailed again to ${r.to}`;
-              });
-            }}
-          >
-            {busy ? "Sending…" : "Resend email"}
+          <button className="btn btn-ghost" disabled={busy !== null} onClick={() => setConfirmResend(true)}>
+            <RotateCw size={16} /> Resend email
           </button>
         )}
+        <span className="flex-1" />
+        <button className="btn btn-ghost" title="Opens the print window — choose Save as PDF" onClick={() => window.print()}>
+          <FileDown size={16} /> Export PDF
+        </button>
+        <button
+          className="btn btn-ghost"
+          title="Copy the brief as formatted text for Notion, Docs, etc."
+          onClick={async () => {
+            await navigator.clipboard.writeText(props.markdown);
+            toast("Markdown copied to clipboard");
+          }}
+        >
+          <Copy size={16} /> Copy Markdown
+        </button>
       </div>
-      {props.emailedAt ? (
-        <span className="cursor-help rounded bg-brand-soft px-2 py-0.5 text-xs text-brand" title={`Counted as delivered. ${TIPS.delivered}`}>
-          ✓ Emailed{" "}
-          {new Date(props.emailedAt).toLocaleString("en-GB", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-        </span>
-      ) : (
-        props.status === "delivered" && (
-          <span className="cursor-help rounded bg-brand-soft px-2 py-0.5 text-xs text-brand" title={`Not emailed, but counted as sent. ${TIPS.delivered}`}>
-            ✓ Marked as delivered
-          </span>
-        )
+
+      {confirmResend && (
+        <div className="panel mt-3 flex flex-wrap items-center gap-3 px-4 py-3">
+          <p className="flex-1 text-[14px] text-heading">
+            Send this brief again{props.recipient ? <> to <strong>{props.recipient}</strong></> : null}?
+          </p>
+          <button className="btn btn-sm btn-ghost" onClick={() => setConfirmResend(false)}>
+            Cancel
+          </button>
+          <button className="btn btn-sm btn-secondary" disabled={busy !== null} onClick={() => send(true)}>
+            {busy === "send" ? "Sending…" : "Resend"}
+          </button>
+        </div>
       )}
-      {msg && <span className="text-xs text-muted">{msg}</span>}
     </div>
   );
 }
