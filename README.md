@@ -42,7 +42,7 @@ Key code: [`lib/pipeline.ts`](lib/pipeline.ts) (orchestration), [`lib/ranking.ts
 |---|---|
 | `/` | Latest brief, Refresh panel (since last brief · last N days · custom range · selected domains · optional email), trends |
 | `/briefs/[id]` | Full brief with feedback (Useful · Not useful · Bookmark), notes and client tags on bookmarks, Export PDF, Copy Markdown, Send email, Mark as delivered |
-| `/briefs` | Archive. Search across titles, summaries and notes; filter by domain and verdict |
+| `/briefs` | Past briefs. Search across titles, summaries and notes; filter by domain and verdict |
 | `/bookmarks` | Bookmarked papers with notes and client tags (her running log). `/library` redirects here |
 | `/runs` | Run history: status, duration, counts, Gemini calls, per-domain status, Retry |
 | `/settings` | Add, edit, pause and delete domains, with a **Preview query** test against arXiv; global preferences; pause delivery |

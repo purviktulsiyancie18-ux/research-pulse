@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 
 const PRIMARY = [
   { href: "/", label: "Brief", match: (p: string) => p === "/" || /^\/briefs\/[^/]+$/.test(p) },
-  { href: "/briefs", label: "Archive", match: (p: string) => p === "/briefs" },
+  { href: "/briefs", label: "Past briefs", match: (p: string) => p === "/briefs" },
   { href: "/bookmarks", label: "Bookmarks", match: (p: string) => p.startsWith("/bookmarks") },
   { href: "/settings", label: "Settings", match: (p: string) => p.startsWith("/settings") },
 ];

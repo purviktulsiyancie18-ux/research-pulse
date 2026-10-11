@@ -27,7 +27,7 @@ export function BriefView({
     <div className="flex flex-col gap-6">
       {showBack && (
         <Link href="/briefs" data-noprint className="btn btn-sm self-start border border-line bg-surface text-body shadow-pill hover:text-heading">
-          <ArrowLeft size={15} /> Archive
+          <ArrowLeft size={15} /> Past briefs
         </Link>
       )}
 

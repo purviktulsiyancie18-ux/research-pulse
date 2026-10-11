@@ -33,7 +33,7 @@ type MatchRow = {
   final_score: string;
 };
 
-export default async function ArchivePage({ searchParams }: PageProps<"/briefs">) {
+export default async function PastBriefsPage({ searchParams }: PageProps<"/briefs">) {
   const sp = await searchParams;
   const term = typeof sp.q === "string" ? sp.q.trim() : "";
   const domain = typeof sp.domain === "string" ? sp.domain : "";
@@ -67,7 +67,7 @@ export default async function ArchivePage({ searchParams }: PageProps<"/briefs">
   return (
     <div className="mx-auto flex max-w-[960px] flex-col gap-6">
       <PageHeader
-        title="Archive"
+        title="Past briefs"
         tip={<InfoTip text="PREVIEW = not sent yet. DELIVERED = sent; its papers won't appear again." align="left" />}
         description="Every brief ever made. Search across titles, summaries and your notes."
       >
