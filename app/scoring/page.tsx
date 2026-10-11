@@ -2,6 +2,7 @@ import Link from "next/link";
 import { effectiveThreshold, FALLBACK_WEIGHTS, normAuthor, normCommunity, scorePaper, STYLES } from "@/lib/ranking";
 import { getSettings } from "@/lib/repo";
 import type { RankingStyle } from "@/lib/types";
+import { InfoTip } from "@/components/InfoTip";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ const INGREDIENTS = [
     key: "sig",
     name: "Significance",
     what: "How important or new the paper is — new record result, strong evidence, changes how the problem is seen, likely impact",
-    source: "Gemini AI reads the abstract (paper summary) and rates it 0–10",
+    source: "Gemini AI reads the paper's abstract and rates it 0–10",
   },
   {
     key: "rel",
@@ -27,19 +28,19 @@ const INGREDIENTS = [
   {
     key: "comm",
     name: "Community buzz",
-    what: "How many Hugging Face members (a large AI community site) upvoted (liked) the paper",
+    what: "How many Hugging Face members liked (upvoted) the paper",
     source: "Hugging Face Daily Papers",
   },
   {
     key: "auth",
     name: "Author seniority",
-    what: "Highest h-index (a measure of how often a researcher's work is cited) among the authors",
-    source: "Semantic Scholar (free research database)",
+    what: "The highest h-index among the authors — how often their work is cited",
+    source: "Semantic Scholar",
   },
   {
     key: "code",
     name: "Code released",
-    what: "Whether the authors published their code (on GitHub), so others can check and reuse the results",
+    what: "Whether the authors published their code on GitHub, so others can check and reuse the results",
     source: "arXiv comments, Hugging Face or Semantic Scholar",
   },
 ] as const;
@@ -68,7 +69,7 @@ export default async function ScoringPage() {
       <div>
         <h1 className="text-2xl font-bold">How papers are scored</h1>
         <p className="text-sm text-muted">
-          The rubric (scoring rules) used to decide which papers make it into the brief. Every paper gets a score from 0 to 10.
+          The rules used to decide which papers make it into the brief. Every paper gets a score from 0 to 10.
           Your current style is <strong>{STYLE_NAMES[style]}</strong> and the pass mark is <strong>{threshold.toFixed(1)}</strong> — change both in{" "}
           <Link href="/settings" className="text-brand underline">
             Settings
@@ -78,7 +79,10 @@ export default async function ScoringPage() {
       </div>
 
       <Section title="1. The five ingredients">
-        <p>Each ingredient is turned into a number from 0 to 10, then multiplied by its weight (share of the total).</p>
+        <p>
+          Each ingredient becomes a number from 0 to 10, then is multiplied by its weight.
+          <InfoTip text="Weight = the ingredient's share of the final score. The weights change with the ranking style chosen in Settings." align="left" />
+        </p>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
@@ -88,7 +92,7 @@ export default async function ScoringPage() {
                 {(Object.keys(STYLES) as RankingStyle[]).map((s) => (
                   <th key={s} className={`py-2 pr-2 text-right ${s === style ? "text-brand" : ""}`}>
                     {STYLE_NAMES[s]}
-                    {s === style && <span className="block text-[10px] normal-case">(your setting)</span>}
+                    {s === style && <span className="block text-[10px] normal-case">your setting</span>}
                   </th>
                 ))}
               </tr>
@@ -116,10 +120,10 @@ export default async function ScoringPage() {
       <Section title="2. Bonus points">
         <ul className="list-disc space-y-1 pl-5">
           <li>
-            <strong>+1.5 Watch-list match</strong> (an author, lab or term on your follow list in Settings appears in the paper)
+            <strong>+1.5 Watch-list match</strong> — an author, lab or term from your follow list in Settings appears in the paper
           </li>
           <li>
-            <strong>+0.5 Author you liked</strong> (you marked 2 or more of this author&apos;s papers as “Read in full” or “Bring to client”)
+            <strong>+0.5 Author you liked</strong> — you marked 2 or more of their papers “Read in full” or “Bring to client”
           </li>
           <li>The final score is capped at 10.</li>
         </ul>
@@ -198,27 +202,25 @@ export default async function ScoringPage() {
             the <strong>top 10 per topic</strong> get a full write-up.
           </li>
           <li>
-            <strong>Pass mark:</strong> the final score must be at least <strong>{threshold.toFixed(1)}</strong> (your threshold of{" "}
-            {settings.significance_threshold}
-            {STYLES[style].thresholdDelta !== 0 && (
-              <>
-                {" "}
-                {STYLES[style].thresholdDelta > 0 ? "+" : "−"} {Math.abs(STYLES[style].thresholdDelta)} for the {STYLE_NAMES[style]} style
-              </>
-            )}
-            ).
+            <strong>Pass mark:</strong> the final score must be at least <strong>{threshold.toFixed(1)}</strong>
+            <InfoTip
+              text={`Your threshold of ${settings.significance_threshold}${
+                STYLES[style].thresholdDelta !== 0
+                  ? `, ${STYLES[style].thresholdDelta > 0 ? "plus" : "minus"} ${Math.abs(STYLES[style].thresholdDelta)} for the ${STYLE_NAMES[style]} style`
+                  : ""
+              }.`}
+            />
+            .
           </li>
           <li>
-            <strong>Slots per topic:</strong> up to {STYLES[style].slots(settings.papers_per_domain)} papers (your setting of {settings.papers_per_domain}
-            {style === "breakthroughs" ? ", capped at 3 for Breakthroughs" : style === "broad" ? ", +2 for Broad" : ""}). High-priority topics get 1
-            extra slot; low-priority topics get 1 fewer.
+            <strong>Slots per topic:</strong> up to {STYLES[style].slots(settings.papers_per_domain)} papers. High-priority topics get 1 extra slot;
+            low-priority topics get 1 fewer.
           </li>
           <li>
-            <strong>No repeats:</strong> a paper that fits two topics appears once, under the topic where it scored highest (“Also relevant to” shows the
-            other). Papers already sent, or marked “Not useful”, never appear again.
+            <strong>No repeats:</strong> a paper that fits two topics appears once, under the topic where it scored highest. Papers already sent, or marked “Not useful”, never appear again.
           </li>
           <li>
-            <strong>Reading-time cap:</strong> if the brief is longer than {settings.reading_minutes} minutes (at 200 words per minute), the
+            <strong>Reading-time cap:</strong> if the brief is longer than {settings.reading_minutes} minutes to read, the
             lowest-scoring papers from low-priority topics are dropped first — every topic keeps at least one paper.
           </li>
           <li>
@@ -237,7 +239,7 @@ export default async function ScoringPage() {
             <span className="mr-2 rounded bg-green-700 px-1.5 py-0.5 text-[11px] font-bold text-white">CLIENT</span>worth bringing up with a client
           </li>
           <li>
-            <span className="mr-2 rounded bg-gray-200 px-1.5 py-0.5 text-[11px] font-bold text-gray-700">FYI</span>good to know, no action needed
+            <span className="mr-2 rounded bg-gray-200 px-1.5 py-0.5 text-[11px] font-bold text-gray-700">FYI</span>for your information — good to know, no action needed
           </li>
         </ul>
         <p className="mt-2 text-sm text-muted">Gemini chooses the verdict. It is advice only and does not change the score.</p>
@@ -246,7 +248,7 @@ export default async function ScoringPage() {
       <Section title="7. If the AI is unavailable">
         <p>
           If Gemini does not respond, the brief is still sent. Papers are ranked on the remaining signals only:{" "}
-          {Math.round(FALLBACK_WEIGHTS.rel * 100)}% keyword match (how often your topic keywords appear), {Math.round(FALLBACK_WEIGHTS.comm * 100)}%
+          {Math.round(FALLBACK_WEIGHTS.rel * 100)}% keyword match, {Math.round(FALLBACK_WEIGHTS.comm * 100)}%
           community buzz, {Math.round(FALLBACK_WEIGHTS.auth * 100)}% author seniority and {Math.round(FALLBACK_WEIGHTS.code * 100)}% code released. Cards
           then show the paper&apos;s own summary with an “AI summary unavailable” tag. If Semantic Scholar or Hugging Face is down, that ingredient&apos;s
           weight is shared out among the others.

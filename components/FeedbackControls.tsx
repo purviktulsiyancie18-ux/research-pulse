@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { api } from "@/lib/client";
+import { TIPS } from "@/lib/glossary";
+import { InfoTip } from "./InfoTip";
 
 type Verdict = "read" | "client" | "not_useful" | null;
 
@@ -40,10 +42,6 @@ export function FeedbackControls(props: {
 
   return (
     <div className="no-print mt-3 border-t border-line pt-3">
-      <p className="mb-1.5 text-[11px] text-muted">
-        Your feedback (teaches the ranking): Read in full = show more like this · Bring to client = save to Library · Not useful = hide forever · Star =
-        bookmark
-      </p>
       <div className="flex flex-wrap items-center gap-1.5">
         {BUTTONS.map((b) => (
           <button
@@ -76,6 +74,7 @@ export function FeedbackControls(props: {
         <button type="button" onClick={() => setOpen(!open)} className="px-1.5 text-xs text-muted underline-offset-2 hover:underline">
           {open ? "Hide note" : "Add note"}
         </button>
+        <InfoTip text={TIPS.feedback} />
         {status && <span className="text-xs text-muted">{status}</span>}
       </div>
       {open && (
@@ -89,7 +88,7 @@ export function FeedbackControls(props: {
           />
           <input
             className="input h-fit"
-            placeholder="Client tag — which client (e.g. Acme Bank)"
+            placeholder="Client tag (e.g. Acme Bank)"
             value={clientTag}
             onChange={(e) => setClientTag(e.target.value)}
             onBlur={() => clientTag !== (props.initial.clientTag ?? "") && save({ clientTag: clientTag || null })}

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/client";
 import { PROGRESS_LABELS } from "@/lib/glossary";
+import { InfoTip } from "./InfoTip";
 
 type Mode = "since_last_brief" | "last_n_days" | "custom";
 interface RunState {
@@ -113,7 +114,13 @@ export function RefreshPanel(props: {
       {open && !running && (
         <div className="mt-4 grid gap-4">
           <div>
-            <span className="label">Window <span className="normal-case font-normal">(which dates to look at)</span></span>
+            <span className="label">
+              Window
+              <InfoTip
+                text={`Which dates to look at. Since last brief = everything since the last brief that was sent, so nothing is missed. Last ${props.lookbackDays} days = the past ${props.lookbackDays} days. Custom range = your own dates, up to 31 days.`}
+                align="left"
+              />
+            </span>
             <div className="flex flex-wrap gap-1.5">
               {(
                 [
@@ -131,13 +138,6 @@ export function RefreshPanel(props: {
                 </button>
               ))}
             </div>
-            <p className="mt-1.5 text-xs text-muted">
-              {mode === "since_last_brief"
-                ? "Papers published since the last brief that was sent — so nothing is missed."
-                : mode === "last_n_days"
-                  ? `Papers published in the past ${props.lookbackDays} days (change the number in Settings).`
-                  : "Pick your own start and end dates (up to 31 days)."}
-            </p>
             {mode === "custom" && (
               <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
                 <input type="date" className="input w-auto" value={from} onChange={(e) => setFrom(e.target.value)} />
@@ -148,7 +148,10 @@ export function RefreshPanel(props: {
             )}
           </div>
           <div>
-            <span className="label">Domains <span className="normal-case font-normal">(topics — dark = included)</span></span>
+            <span className="label">
+              Domains
+              <InfoTip text="The research topics to scan. Dark green = included, white = skipped. “Paused” topics are switched off in Settings but can still be included here." align="left" />
+            </span>
             <div className="flex flex-wrap gap-1.5">
               {props.domains.map((d) => {
                 const on = selected.includes(d.id);
@@ -167,7 +170,8 @@ export function RefreshPanel(props: {
           </div>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} />
-            Email this brief when ready <span className="text-xs text-muted">(otherwise it&apos;s a preview shown here only)</span>
+            Email this brief when ready
+            <InfoTip text="If unticked, the brief is a preview shown here only. You can still email it later from the brief page." align="left" />
           </label>
           <div className="flex items-center gap-2">
             <button
@@ -197,9 +201,7 @@ export function RefreshPanel(props: {
             {Object.entries(run?.progress ?? {}).map(([id, st]) => (
               <li key={id} className="flex items-center justify-between gap-2 rounded-md bg-background px-3 py-1.5 text-sm">
                 <span className="min-w-0 truncate">{nameOf(id)}</span>
-                <span className={`text-right text-xs font-medium ${STATUS_STYLE[st] ?? ""}`}>
-                  {st} <span className="font-normal text-muted">({PROGRESS_LABELS[st] ?? st})</span>
-                </span>
+                <span className={`text-right text-xs font-medium ${STATUS_STYLE[st] ?? ""}`}>{PROGRESS_LABELS[st] ?? st}</span>
               </li>
             ))}
             {!run &&

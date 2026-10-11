@@ -33,7 +33,7 @@ export default async function Home() {
         />
         <TrendsStrip />
         <div className="card no-print p-4 text-xs text-muted">
-          Weekly brief is emailed automatically every Monday, 5:30–6:29 AM IST (India time).{" "}
+          Emailed automatically every Monday, 5:30–6:29 AM IST (India Standard Time).{" "}
           <Link href="/scoring" className="text-brand underline">
             How papers are scored →
           </Link>

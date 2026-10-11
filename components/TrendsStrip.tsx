@@ -1,5 +1,6 @@
 import { q } from "@/lib/db";
 import { getDomains } from "@/lib/repo";
+import { InfoTip } from "./InfoTip";
 
 type PerDomain = Record<string, { scanned: number; surfaced: number }>;
 
@@ -16,7 +17,10 @@ export async function TrendsStrip() {
   return (
     <div className="card no-print p-4">
       <h2 className="font-semibold">Trends</h2>
-      <p className="text-xs text-muted">Papers scanned (looked at) per topic — latest brief vs the one before. Dark bar = now, grey = before, (+/−) = change, ✓ = included</p>
+      <p className="text-xs text-muted">
+        Papers scanned per topic vs the previous brief
+        <InfoTip text="Dark bar = this brief, grey bar = the brief before. (+/−) = change in papers scanned. ✓ = papers included in the brief." align="right" />
+      </p>
       <ul className="mt-3 grid gap-2.5">
         {domains.map((d) => {
           const n = now[d.id]?.scanned ?? 0;

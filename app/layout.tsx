@@ -52,7 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </header>
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
         <footer className="no-print border-t border-line py-4 text-center text-xs text-muted">
-          Research Pulse · papers from arXiv (free research paper site) · author data from Semantic Scholar · community likes from Hugging Face · summaries by Gemini Flash (Google AI) · brief goes to Kavita only
+          Research Pulse · Papers: arXiv · Author data: Semantic Scholar · Community likes: Hugging Face · AI: Gemini Flash · For Kavita only
         </footer>
       </body>
     </html>

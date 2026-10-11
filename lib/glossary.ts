@@ -1,59 +1,62 @@
-// Plain-language descriptions shown in brackets next to technical terms across the UI.
+// Short meanings for abbreviations (shown inline) and longer explanations (shown in ⓘ tooltips).
 
+/** arXiv category code → short meaning, shown right next to the code. */
 export const CATEGORY_LABELS: Record<string, string> = {
   "cs.AI": "Artificial Intelligence",
-  "cs.CL": "Language AI / chatbots / LLMs",
-  "cs.CV": "Computer Vision — images & video",
+  "cs.CL": "Language AI",
+  "cs.CV": "Computer Vision",
   "cs.LG": "Machine Learning",
-  "cs.IR": "Information Retrieval — search",
+  "cs.IR": "Search & Retrieval",
   "cs.MA": "Multi-Agent Systems",
   "cs.RO": "Robotics",
   "cs.SE": "Software Engineering",
   "cs.PL": "Programming Languages",
   "cs.CR": "Cybersecurity",
   "cs.DB": "Databases",
-  "cs.DC": "Distributed / cloud computing",
+  "cs.DC": "Cloud Computing",
   "cs.HC": "Human–Computer Interaction",
-  "cs.NE": "Neural & evolutionary computing",
+  "cs.NE": "Neural Computing",
   "cs.SD": "Sound",
-  "cs.CY": "Computers & Society — ethics, policy",
+  "cs.CY": "Ethics & Society",
   "cs.GT": "Game Theory",
-  "cs.SI": "Social & information networks",
-  "eess.AS": "Audio & speech",
-  "eess.IV": "Image & video processing",
-  "eess.SP": "Signal processing",
-  "eess.SY": "Systems & control",
-  "stat.ML": "Machine Learning — statistics side",
-  "q-fin.CP": "Computational finance",
-  "q-bio.QM": "Quantitative biology methods",
+  "cs.SI": "Social Networks",
+  "eess.AS": "Audio & Speech",
+  "eess.IV": "Image & Video",
+  "eess.SP": "Signal Processing",
+  "eess.SY": "Control Systems",
+  "stat.ML": "Statistical ML",
+  "q-fin.CP": "Computational Finance",
+  "q-bio.QM": "Quantitative Biology",
 };
 
-export const categoryLabel = (code: string) => CATEGORY_LABELS[code] ?? "arXiv subject category";
+export const categoryLabel = (code: string) => CATEGORY_LABELS[code] ?? "";
 
 export const VERDICT_LABELS: Record<string, string> = {
-  READ: "read it in full",
-  CLIENT: "bring it to a client",
-  FYI: "good to know",
+  READ: "Worth reading in full",
+  CLIENT: "Worth bringing to a client",
+  FYI: "For your information — good to know",
 };
 
+/** Plain words shown instead of internal status names. */
 export const PROGRESS_LABELS: Record<string, string> = {
-  queued: "waiting its turn",
-  fetching: "collecting papers from arXiv",
-  enriching: "checking author seniority & upvotes",
-  ranking: "Gemini AI is reading & scoring",
-  done: "finished",
-  failed: "something went wrong",
-  skipped: "ran out of time — retry later",
+  queued: "Waiting",
+  fetching: "Collecting papers",
+  enriching: "Checking authors & likes",
+  ranking: "AI scoring",
+  done: "Done",
+  failed: "Failed",
+  skipped: "Skipped",
 };
 
-/** Adds a short bracketed explanation to a "why ranked" chip. */
-export function explainChip(chip: string): string {
-  if (/^Senior authors \(h-index (\d+)\)$/.test(chip))
-    return chip.replace(/\)$/, " — a well-cited, experienced researcher)");
-  if (/^\d+ upvotes?$/.test(chip)) return `${chip} (Hugging Face community likes)`;
-  if (chip === "Code released") return "Code released (authors shared their code, so results can be checked)";
-  if (chip.startsWith("Watch-list: ")) return `${chip} (on your follow list in Settings)`;
-  if (chip === "You found this author useful") return `${chip} (you liked their papers before)`;
-  if (chip.startsWith("Keyword relevance")) return `${chip} (how often your topic keywords appear)`;
-  return chip;
-}
+export const TIPS = {
+  arxiv: "arXiv is a free website where researchers post new papers. It is where Research Pulse gets them.",
+  score: "Final score out of 10, combining AI significance, topic fit, community likes, author seniority and released code. See the Scoring tab.",
+  whyRanked: "The reasons this paper scored well — from the AI's judgement and signals like upvotes (Hugging Face likes), author h-index (how often their work is cited) and released code.",
+  preview: "Not sent yet. Its papers can still appear in Monday's brief until you email it or mark it as delivered.",
+  delivered: "Sent. Papers in this brief will never appear in a future brief.",
+  headline: "A 2–3 sentence summary of the most important developments across all topics, written by Gemini AI.",
+  feedback:
+    "Read in full = show more like this · Bring to client = save to Library · Not useful = never show again · Star = bookmark. Your feedback teaches the ranking.",
+  closestMiss: "The best paper in this topic that scored just below your pass mark.",
+  alsoRelevant: "This paper fits more than one topic. It is shown once, under the topic where it scored highest.",
+};

@@ -175,12 +175,12 @@ export function fmtDate(isoStr: string, opts: Intl.DateTimeFormatOptions = { day
 
 export function authorLine(authors: Author[]) {
   const names = authors.map((a) => a.name);
-  return names.length > 3 ? `${names.slice(0, 3).join(", ")} et al.` : names.join(", ");
+  return names.length > 3 ? `${names.slice(0, 3).join(", ")} and others` : names.join(", ");
 }
 
 export function statsLine(v: BriefView) {
   const s = v.stats;
-  return `${s.scanned ?? 0} papers scanned across ${s.domains ?? v.sections.length} domain${(s.domains ?? 0) === 1 ? "" : "s"} · ${s.surfaced ?? 0} surfaced`;
+  return `${s.scanned ?? 0} papers scanned across ${s.domains ?? v.sections.length} domain${(s.domains ?? 0) === 1 ? "" : "s"} · ${s.surfaced ?? 0} included`;
 }
 
 export function briefSubject(v: BriefView) {

@@ -3,6 +3,7 @@ import { fmtDate } from "@/lib/brief";
 import { q } from "@/lib/db";
 import { PROMPT_VERSION } from "@/lib/analysis";
 import { getDomains } from "@/lib/repo";
+import { InfoTip } from "@/components/InfoTip";
 
 export const dynamic = "force-dynamic";
 
@@ -67,7 +68,8 @@ export default async function ArchivePage({ searchParams }: PageProps<"/briefs">
     <div className="mx-auto max-w-[860px]">
       <h1 className="text-2xl font-bold">Archive</h1>
       <p className="text-sm text-muted">
-        Every brief ever made. Search across titles, summaries and your notes. PREVIEW = not sent yet · DELIVERED = sent (papers won&apos;t repeat).
+        Every brief ever made. Search across titles, summaries and your notes.
+        <InfoTip text="PREVIEW = not sent yet. DELIVERED = sent; its papers won’t appear again." align="left" />
       </p>
 
       <form className="card mt-4 grid gap-2 p-3 sm:grid-cols-[1fr_200px_140px_auto]">
@@ -82,9 +84,9 @@ export default async function ArchivePage({ searchParams }: PageProps<"/briefs">
         </select>
         <select name="verdict" defaultValue={verdict} className="input">
           <option value="">Any verdict</option>
-          <option value="READ">READ (read in full)</option>
-          <option value="CLIENT">CLIENT (bring to client)</option>
-          <option value="FYI">FYI (good to know)</option>
+          <option value="READ">READ · read in full</option>
+          <option value="CLIENT">CLIENT · bring to client</option>
+          <option value="FYI">FYI · for your information</option>
         </select>
         <div className="flex gap-1.5">
           <button className="btn btn-primary">Search</button>
@@ -125,9 +127,9 @@ export default async function ArchivePage({ searchParams }: PageProps<"/briefs">
             <thead className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
               <tr>
                 <th className="px-3 py-2">Week of</th>
-                <th className="px-3 py-2">Window (dates covered)</th>
-                <th className="px-3 py-2 text-right">Scanned (looked at)</th>
-                <th className="px-3 py-2 text-right">Surfaced (included)</th>
+                <th className="px-3 py-2">Window</th>
+                <th className="px-3 py-2 text-right">Scanned</th>
+                <th className="px-3 py-2 text-right">Included</th>
                 <th className="px-3 py-2">Status</th>
               </tr>
             </thead>

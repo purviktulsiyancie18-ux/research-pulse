@@ -44,7 +44,7 @@ export default async function LibraryPage({ searchParams }: PageProps<"/library"
   return (
     <div className="mx-auto max-w-[760px]">
       <h1 className="text-2xl font-bold">Library</h1>
-      <p className="text-sm text-muted">Your personal collection: every paper you starred (★ bookmarked) or marked “Bring to client”, with your notes. Click a tag to filter by client.</p>
+      <p className="text-sm text-muted">Papers you starred or marked “Bring to client”, with your notes. Click a tag to filter by client.</p>
 
       {tags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5 text-xs">

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { briefToMarkdown, fmtDate, statsLine, type BriefView as View } from "@/lib/brief";
 import { appUrl } from "@/lib/email";
+import { TIPS } from "@/lib/glossary";
 import { BriefActions } from "./BriefActions";
+import { InfoTip } from "./InfoTip";
 import { PaperCard } from "./PaperCard";
 
 export function BriefView({ view, showTitleLink = false }: { view: View; showTitleLink?: boolean }) {
@@ -25,9 +27,7 @@ export function BriefView({ view, showTitleLink = false }: { view: View; showTit
             >
               {view.status === "delivered" ? "DELIVERED" : "PREVIEW"}
             </span>
-            <span className="text-xs italic text-muted">
-              {view.status === "delivered" ? "(sent — these papers won't repeat)" : "(not sent yet — papers may appear again on Monday)"}
-            </span>
+            <InfoTip text={view.status === "delivered" ? TIPS.delivered : TIPS.preview} align="left" />
             <span className="text-xs text-muted">Last updated {lastUpdated} IST</span>
           </div>
           <h1 className="mt-1 text-2xl font-bold tracking-tight">
@@ -40,8 +40,7 @@ export function BriefView({ view, showTitleLink = false }: { view: View; showTit
             )}
           </h1>
           <p className="text-sm text-muted">
-            {fmtDate(view.windowStart)} – {fmtDate(view.windowEnd)} (papers published in this window) · {statsLine(view)} (surfaced = included) · ~
-            {view.readingMinutes ?? "?"} min read
+            {fmtDate(view.windowStart)} – {fmtDate(view.windowEnd)} · {statsLine(view)} · ~{view.readingMinutes ?? "?"} min read
           </p>
         </div>
         <BriefActions
@@ -54,7 +53,10 @@ export function BriefView({ view, showTitleLink = false }: { view: View; showTit
 
       {view.headline && (
         <div className="mt-4 rounded-r-lg border-l-4 border-brand bg-surface px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Headline of the week (AI summary across all topics)</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+            Headline of the week
+            <InfoTip text={TIPS.headline} align="left" />
+          </p>
           <p className="mt-1 text-[15px] leading-relaxed">{view.headline}</p>
         </div>
       )}
@@ -86,7 +88,7 @@ export function BriefView({ view, showTitleLink = false }: { view: View; showTit
             </p>
           )}
           {!s.cards.length && !s.notice && (
-            <p className="mt-2 text-sm text-muted">Quiet week — nothing above your threshold (the minimum score set in Settings).</p>
+            <p className="mt-2 text-sm text-muted">Quiet week — nothing scored above your pass mark.</p>
           )}
           <div className="mt-3 flex flex-col gap-3">
             {s.cards.map((c) => (
@@ -95,7 +97,7 @@ export function BriefView({ view, showTitleLink = false }: { view: View; showTit
           </div>
           {!s.cards.length && s.closestMiss && (
             <details className="mt-2">
-              <summary className="cursor-pointer text-sm text-muted hover:text-brand">Closest miss (best paper that fell just short — click to view)</summary>
+              <summary className="cursor-pointer text-sm text-muted hover:text-brand">Closest miss — show the best paper just below the pass mark</summary>
               <div className="mt-2">
                 <PaperCard card={s.closestMiss} briefId={view.id} />
               </div>
