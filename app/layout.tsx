@@ -41,17 +41,6 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <main className="mx-auto w-full max-w-content flex-1" style={{ padding: "clamp(20px,4vw,40px) clamp(16px,4vw,40px)" }}>
           {children}
         </main>
-
-        <footer className="mx-auto w-full max-w-content" style={{ padding: "0 clamp(16px,4vw,40px) clamp(20px,4vw,40px)" }}>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-card border border-line bg-surface px-6 py-5 text-[12px] leading-[18px] text-muted-text">
-            <span className="font-display text-[13px] font-bold text-heading">Research Pulse</span>
-            <span>Papers: arXiv</span>
-            <span>Author data: Semantic Scholar</span>
-            <span>Community likes: Hugging Face</span>
-            <span>AI: Gemini Flash</span>
-            <span className="ml-auto">For Kavita only</span>
-          </div>
-        </footer>
         <Toaster />
       </body>
     </html>
