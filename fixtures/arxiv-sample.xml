@@ -1,0 +1,86 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/hZXapJw8OO2/0haaznHVZJGk79A</id>
+  <title>arXiv Query: search_query=cat:cs.IR AND abs:RAG&amp;id_list=&amp;start=0&amp;max_results=3</title>
+  <updated>2026-10-11T10:43:57Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=cat:cs.IR+AND+abs:RAG&amp;start=0&amp;max_results=3&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>3</opensearch:itemsPerPage>
+  <opensearch:totalResults>1630</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2610.12243v1</id>
+    <title>NativeScope: Relation-Localized Retrieval over Native Topology with a Correct Anchor</title>
+    <updated>2026-10-08T16:21:51Z</updated>
+    <link href="https://arxiv.org/abs/2610.12243v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.12243v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Dense retrieval usually ranks text chunks by their semantic similarity to a question. This ignores structure that many data systems already store, including section membership, session boundaries, and native order. We propose NativeScope, a scope-then-rank method for queries with a known anchor and relation. It represents a query as q -&gt; (A, r, B). The anchor A and relation r select native units through belonging, before, or after operators, and the target term B ranks only chunks that overlap the selected scope. An internal variant, NS-FullQ, ranks the same candidates with the full question. We evaluate both methods on 200 controlled document and memory records derived from QASPER and LongMemEval under a 1,024-token budget. NativeScope attains native-unit recall of 89.28 percent for documents and 72.50 percent for memories, improving over instance-wide Dense RAG by 42.75 and 22.00 percentage points. NS-FullQ reaches 87.78 percent and 68.50 percent; its differences from NativeScope are inconclusive, locating the primary gain in relational scoping rather than the shorter ranking query. With automatic Top-1 anchors, memory recall falls to 35.50 percent. NativeScope is therefore effective when anchor coordinates and native relations are reliable, but hard scoping inherits errors from the localization interface.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-08T16:21:51Z</published>
+    <arxiv:comment>14 pages, 4 figures, and 6 tables. Includes an appendix with reproduction information and an evidence inventory</arxiv:comment>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Long Wang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.11370v1</id>
+    <title>RIT-RAG: Navigating Document Corpora with Retrieval-Induced Trees</title>
+    <updated>2026-10-08T07:03:17Z</updated>
+    <link href="https://arxiv.org/abs/2610.11370v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.11370v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-augmented generation (RAG) grounds language models in external corpora. Agentic RAG enables iterative search, yet exposes the model to isolated chunks without document structure, making it difficult to distinguish relevant evidence from chunks that merely resemble the query. Structure-aware methods such as PageIndex navigate document structure but cannot scale to the structures of large corpora, which do not fit in the LLM context. Hence, they first commit to a single document using a document retriever and cannot recover from a wrong choice. We propose RIT-RAG (Retrieval-Induced Tree RAG), which combines content retrieval with structural navigation. Offline, RIT-RAG builds a tree for each document from its table of contents or sitemap. At query time, it retrieves a broad set of chunks and uses their positions to induce manageable sub-trees, potentially across multiple documents. An LLM agent navigates these sub-trees, selectively reads promising nodes, and reformulates queries when needed. Thus, retrieval proposes where to look, while the agent decides what to read. Across financial, scientific, and customer-support benchmarks, RIT-RAG achieves the highest answer accuracy among vanilla, graph-based, and agentic baselines. On EntQABench, our new benchmark of 2.84 million technical-documentation webpages, it improves accuracy by 6.8 to 11.4 points over the strongest baseline across three LLMs.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-08T07:03:17Z</published>
+    <arxiv:comment>24 pages (main text through Limitations ends on page 9, followed by references and appendix), 9 figures, 16 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Meghanadh Pulivarthi</name>
+    </author>
+    <author>
+      <name>Swaraj Kumar Biswal</name>
+    </author>
+    <author>
+      <name>Kushagra Bhushan</name>
+    </author>
+    <author>
+      <name>Yatin Nandwani</name>
+    </author>
+    <author>
+      <name>Sachindra Joshi</name>
+    </author>
+    <author>
+      <name>Dinesh Raghu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.09412v1</id>
+    <title>Finding the Right Balance: Relevance and Diversity in LLM Retrieval</title>
+    <updated>2026-10-07T04:14:31Z</updated>
+    <link href="https://arxiv.org/abs/2610.09412v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.09412v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval diversification is widely available in retrieval-augmented generation (RAG) frameworks, yet prior studies disagree on whether it improves retrieval and answer quality. We show that its effectiveness varies primarily with candidate-pool redundancy, in a pattern consistent with the number of distinct evidence pieces a query requires. Using controlled near-duplicate injection and production-style overlapping chunking, we find that diversification harms relevance, evidence coverage and answer quality on clean pools, but becomes beneficial on multi-evidence tasks when redundancy causes nearest-neighbor retrieval to select repeated passages. We therefore introduce a query-adaptive rule that diversifies only when the effective number of distinct documents in the nearest-neighbor top-$k$ selection falls below the query's evidence requirement. Computed from existing embeddings, the rule captures most of the achievable gain, transfers across datasets and encoders and automatically reduces to nearest-neighbor retrieval for single-evidence queries. We also introduce RNG-Score, a geometric reranker with an exact nearest-neighbor fallback whose margin indicates duplicate structure. Overall, we conclude that diversification should be used selectively, based on observable redundancy and evidence requirements.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-07T04:14:31Z</published>
+    <arxiv:comment>36 pages, 8 figures, 13 tables. Code and results: https://github.com/GuillaumeBrouillette/finding-the-right-balance</arxiv:comment>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Guillaume Brouillette</name>
+      <arxiv:affiliation>Université du Québec à Trois-Rivières, Trois-Rivières, Canada</arxiv:affiliation>
+    </author>
+    <author>
+      <name>Faustin Kagabo</name>
+      <arxiv:affiliation>Université du Québec à Trois-Rivières, Trois-Rivières, Canada</arxiv:affiliation>
+    </author>
+    <author>
+      <name>Usef Faghihi</name>
+      <arxiv:affiliation>Université du Québec à Trois-Rivières, Trois-Rivières, Canada</arxiv:affiliation>
+    </author>
+    <author>
+      <name>Nadia Ghazzali</name>
+      <arxiv:affiliation>Université du Québec à Trois-Rivières, Trois-Rivières, Canada</arxiv:affiliation>
+    </author>
+  </entry>
+</feed>

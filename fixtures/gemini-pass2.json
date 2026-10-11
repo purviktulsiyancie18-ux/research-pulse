@@ -1,0 +1,15 @@
+{
+  "domain_headline": "Fixture: RAG work this week centres on structure-aware retrieval.",
+  "papers": [
+    {
+      "id": "FIXTURE_ID",
+      "summary": "Fixture summary in two short sentences. It is deterministic.",
+      "key_finding": "Fixture key finding with a +5 point gain on a benchmark.",
+      "why_it_matters": "Fixture reason this matters to a strategy consultant.",
+      "client_angle": "Fixture business implication.",
+      "verdict": "read",
+      "significance": "7.5",
+      "significance_reasons": ["fixture reason"]
+    }
+  ]
+}
