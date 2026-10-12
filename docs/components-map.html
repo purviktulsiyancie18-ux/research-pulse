@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Research Pulse — Components Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #eef3ef; --card: #ffffff; --ink: #163a2f; --text: #1f2d27; --mut: #5b6b64; --line: #d5dfd9; --hdr: #f4f7f5;
+    --h: #fde8c8; --hb: #e3a84f; --ai: #e5e2fb; --aib: #7b72d6; --sys: #ddecf7; --sysb: #4f8fbf; --out: #dcf1e1; --outb: #3f9a5c;
+    --wire: #2f5d50; --fb: #c9821a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { width: 2000px; height: 1618px; background: var(--bg); color: var(--text); font-family: Inter, -apple-system, "Segoe UI", sans-serif; position: relative; overflow: hidden; }
+  h1 { position: absolute; left: 36px; top: 30px; margin: 0; font-size: 42px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
+  .sub { position: absolute; left: 36px; top: 89px; margin: 0; font-size: 18px; color: var(--mut); }
+  .card { position: absolute; left: 36px; top: 134px; width: 1928px; height: 1304px; background: var(--card); border-radius: 20px; }
+  .grid { position: absolute; left: 58px; top: 155px; width: 1802px; height: 1230px; border: 1px solid var(--line); }
+  .hrow { position: absolute; left: 58px; top: 155px; width: 1802px; height: 53px; background: var(--hdr); border-bottom: 1px solid var(--line); }
+  .col { position: absolute; top: 155px; height: 1230px; border-left: 1px solid var(--line); }
+  .row { position: absolute; left: 58px; width: 1802px; border-top: 1px solid var(--line); }
+  .hd { position: absolute; top: 155px; height: 53px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; letter-spacing: 0.14em; color: var(--ink); }
+  .lane { position: absolute; left: 73px; width: 170px; display: flex; flex-direction: column; justify-content: center; font-weight: 700; font-size: 17px; letter-spacing: 0.04em; color: var(--ink); text-transform: uppercase; line-height: 1.2; }
+  .lane small { font-weight: 400; font-size: 14px; letter-spacing: 0; color: var(--mut); text-transform: none; margin-top: 4px; }
+  .b { position: absolute; border: 2px solid; border-radius: 8px; padding: 9px 12px; font-size: 14px; line-height: 1.4; z-index: 2; }
+  .b i { font-style: normal; font-weight: 800; margin-right: 6px; }
+  .h { background: var(--h); border-color: var(--hb); } .ai { background: var(--ai); border-color: var(--aib); }
+  .sys { background: var(--sys); border-color: var(--sysb); } .out { background: var(--out); border-color: var(--outb); }
+  .gate { position: absolute; border: 2px dashed var(--fb); border-radius: 10px; z-index: 1; }
+  .gate-label { position: absolute; font-size: 13px; font-weight: 800; letter-spacing: 0.1em; color: #b06d0d; background: #fff; padding: 0 6px; z-index: 3; }
+  .wlabel { position: absolute; font-size: 13px; font-style: italic; color: var(--wire); background: #fff; padding: 0 4px; z-index: 3; white-space: nowrap; }
+  .vlabel { position: absolute; font-size: 13px; font-style: italic; transform: rotate(90deg); transform-origin: left top; white-space: nowrap; background: #fff; padding: 0 4px; z-index: 3; }
+  svg#wires { position: absolute; left: 0; top: 0; width: 2000px; height: 1618px; z-index: 1; overflow: visible; }
+  .legend { position: absolute; left: 58px; top: 1399px; display: flex; gap: 28px; font-size: 15px; color: var(--text); align-items: center; }
+  .legend span { display: flex; align-items: center; gap: 8px; }
+  .legend b { width: 17px; height: 17px; border-radius: 4px; border: 2px solid; display: inline-block; }
+  .notes { position: absolute; top: 1455px; height: 126px; width: 632px; background: var(--card); border-radius: 16px; padding: 14px 20px; }
+  .notes h3 { margin: 0 0 8px; font-size: 17px; font-weight: 700; color: var(--ink); }
+  .notes ul { margin: 0; padding-left: 20px; font-size: 15px; line-height: 1.55; }
+</style>
+</head>
+<body>
+<h1>Research Pulse — Components Map</h1>
+<p class="sub">Weekly AI-research brief for Kavita · Every Monday before 7:00 AM IST, or on demand with Refresh · Numbers and arrows show the order of steps · Gemini Flash is the only AI step, inside Processing</p>
+
+<div class="card"></div>
+<div class="hrow"></div>
+<div class="grid"></div>
+<div class="col" style="left:248px"></div><div class="col" style="left:483px"></div><div class="col" style="left:748px"></div>
+<div class="col" style="left:1038px"></div><div class="col" style="left:1533px"></div>
+<div class="row" style="top:365px"></div><div class="row" style="top:522px"></div><div class="row" style="top:719px"></div>
+<div class="row" style="top:836px"></div><div class="row" style="top:953px"></div><div class="row" style="top:1090px"></div><div class="row" style="top:1267px"></div>
+
+<div class="hd" style="left:248px;width:235px">TRIGGER</div>
+<div class="hd" style="left:483px;width:265px">INPUT</div>
+<div class="hd" style="left:748px;width:290px">CONTEXT</div>
+<div class="hd" style="left:1038px;width:495px">PROCESSING</div>
+<div class="hd" style="left:1533px;width:327px">OUTPUT</div>
+
+<div class="lane" style="top:208px;height:157px">Kavita<small>Senior consultant</small></div>
+<div class="lane" style="top:365px;height:157px">Vercel Cron<small>Scheduler</small></div>
+<div class="lane" style="top:522px;height:197px">Research Pulse App<small>Next.js on Vercel</small></div>
+<div class="lane" style="top:719px;height:117px">Neon<small>Postgres database</small></div>
+<div class="lane" style="top:836px;height:117px">arXiv API<small>Paper source</small></div>
+<div class="lane" style="top:953px;height:137px">Semantic Scholar + Hugging Face<small>Significance signals</small></div>
+<div class="lane" style="top:1090px;height:177px">Gemini Flash<small>Relevance &amp; summary</small></div>
+<div class="lane" style="top:1267px;height:118px">Resend<small>Email</small></div>
+
+<!-- Kavita -->
+<div id="n1b" class="b h" style="left:267px;top:236px;width:198px"><i>1b</i>Clicks <b>Refresh now</b>: since last brief · last 7 days · custom range · chosen domains</div>
+<div id="n0" class="b h" style="left:503px;top:226px;width:226px"><i>0</i>Edits domain list in Settings: keywords, arXiv categories, exclude words, papers per domain, email.<br><b>No code.</b></div>
+<div id="gate" class="gate"></div>
+<div id="gatelabel" class="gate-label">HUMAN DECISION GATE</div>
+<div id="n13" class="b h" style="left:1553px;top:240px;width:287px"><i>13</i>Reads brief in under 10 min; marks each paper <b>Useful · Not useful · Bookmark</b> (saved with note + client tag)</div>
+
+<!-- Vercel Cron -->
+<div id="n1a" class="b sys" style="left:267px;top:383px;width:198px"><i>1a</i>Fires every Monday, cron 0 0 * * 1 → lands 5:30–6:29 AM IST · protected by CRON_SECRET</div>
+
+<!-- App -->
+<div id="n2" class="b sys" style="left:503px;top:570px;width:226px"><i>2</i>Builds the run: weekly or manual, date window, active domains · 10-min cooldown on manual refresh</div>
+<div id="n6" class="b sys" style="left:1058px;top:540px;width:207px"><i>6</i>Cleans: removes duplicates across domains, skips papers already sent or marked Not useful, drops exclude words, keeps only papers in the date window</div>
+<div id="n9" class="b sys" style="left:1307px;top:536px;width:208px"><i>9</i>Ranks &amp; composes: Gemini significance + relevance + upvotes + h-index + code + watch-list → top 3–5 per domain above pass mark, ≤ 10 min read · if Gemini fails, still sends titles + abstracts</div>
+<div id="n11" class="b out" style="left:1553px;top:560px;width:287px"><i>11</i>Brief page grouped by domain: summary, key finding, why it matters, client angle, paper links · Past briefs · Bookmarks · run history · PDF export</div>
+
+<!-- Neon -->
+<div id="n3" class="b sys" style="left:768px;top:737px;width:251px"><i>3</i>Loads settings: domains, keywords, IDs of papers already sent, past feedback</div>
+<div id="n10" class="b out" style="left:1553px;top:735px;width:287px"><i>10</i>Saves brief, papers, scores, run log · feedback (Useful, Not useful, Bookmark) tunes the next run's ranking</div>
+
+<!-- arXiv -->
+<div id="n4" class="b sys" style="left:768px;top:852px;width:251px"><i>4</i>Fetches new papers per domain by category + keywords, newest first · 1 request every 3 s</div>
+
+<!-- S2 + HF -->
+<div id="n5" class="b sys" style="left:768px;top:971px;width:251px"><i>5</i>Adds signals per paper: author h-index, affiliations, TLDR, community upvotes, code link</div>
+
+<!-- Gemini -->
+<div id="n7" class="b ai" style="left:1058px;top:1128px;width:207px"><i>7</i>Pass 1 on titles + abstracts: relevance to the domain 0–10 → keeps top 10 per domain</div>
+<div id="n8" class="b ai" style="left:1307px;top:1104px;width:208px"><i>8</i>Pass 2 on shortlist → JSON: 2-line summary, key finding, why it matters, client angle, suggested READ / CLIENT / FYI, significance 0–10 · headline of the week</div>
+
+<!-- Resend -->
+<div id="n12" class="b out" style="left:1553px;top:1285px;width:287px"><i>12</i>Emails the brief by domain + link to the app · Monday: automatic · Refresh: preview first, send on click</div>
+
+<svg id="wires" xmlns="http://www.w3.org/2000/svg"></svg>
+
+<div class="legend">
+  <span><b style="background:var(--h);border-color:var(--hb)"></b>Human</span>
+  <span><b style="background:var(--ai);border-color:var(--aib)"></b>AI (Gemini Flash)</span>
+  <span><b style="background:var(--sys);border-color:var(--sysb)"></b>System / data</span>
+  <span><b style="background:var(--out);border-color:var(--outb)"></b>Output</span>
+  <span><b style="background:#fff;border:2px dashed var(--fb)"></b>Human decision gate</span>
+  <span style="color:var(--fb)">— — feedback loop</span>
+</div>
+
+<div class="notes" style="left:36px"><h3>Kavita at the edges</h3><ul>
+  <li>She sets the domains and decides what is useful, what to bookmark and what to bring to a client</li>
+  <li>AI only filters, summarises and ranks in the middle</li></ul></div>
+<div class="notes" style="left:684px"><h3>Guardrails</h3><ul>
+  <li>Only papers from the date window; no paper is sent twice</li>
+  <li>Every ranking shows why; Gemini outage still sends titles + abstracts</li>
+  <li>Nothing goes to clients; the brief reaches Kavita only</li></ul></div>
+<div class="notes" style="left:1332px"><h3>Out of scope (extend later)</h3><ul>
+  <li>OpenAlex for journals beyond arXiv · GitHub stars as a signal</li>
+  <li>Extra recipients per domain · "Ask about this paper" Q&amp;A</li></ul></div>
+
+<script>
+function R(id) {
+  const r = document.getElementById(id).getBoundingClientRect();
+  return { l: r.left, r: r.right, t: r.top, b: r.bottom, cx: (r.left + r.right) / 2, cy: (r.top + r.bottom) / 2, h: r.height };
+}
+const svg = document.getElementById("wires");
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); svg.appendChild(e); return e; }
+function wire(pts, { color = "#2f5d50", dashed = true, dot = true, arrow = true } = {}) {
+  el("polyline", { points: pts.map((p) => p.join(",")).join(" "), fill: "none", stroke: color, "stroke-width": 2, "stroke-dasharray": dashed ? "6 5" : "", "stroke-linejoin": "round" });
+  if (dot) el("circle", { cx: pts[0][0], cy: pts[0][1], r: 4.5, fill: color });
+  if (arrow) {
+    const [x2, y2] = pts[pts.length - 1], [x1, y1] = pts[pts.length - 2];
+    const a = Math.atan2(y2 - y1, x2 - x1), s = 12;
+    const p1 = [x2 - s * Math.cos(a - 0.45), y2 - s * Math.sin(a - 0.45)], p2 = [x2 - s * Math.cos(a + 0.45), y2 - s * Math.sin(a + 0.45)];
+    el("polygon", { points: `${x2},${y2} ${p1.join(",")} ${p2.join(",")}`, fill: color });
+  }
+}
+function label(text, x, y, cls = "wlabel", color) {
+  const d = document.createElement("div"); d.className = cls; d.textContent = text; d.style.left = x + "px"; d.style.top = y + "px";
+  if (color) d.style.color = color; document.body.appendChild(d); return d;
+}
+function draw() {
+  // Size the dashed human-decision gate around step 13.
+  const g = R("n13"), gate = document.getElementById("gate"), gl = document.getElementById("gatelabel");
+  Object.assign(gate.style, { left: g.l - 10 + "px", top: g.t - 14 + "px", width: g.r - g.l + 20 + "px", height: g.h + 24 + "px" });
+  Object.assign(gl.style, { left: g.l + 3 + "px", top: g.t - 25 + "px" });
+  const b1b = R("n1b"), b1a = R("n1a"), b0 = R("n0"), b2 = R("n2"), b3 = R("n3"), b4 = R("n4"), b5 = R("n5"), b6 = R("n6"),
+    b7 = R("n7"), b8 = R("n8"), b9 = R("n9"), b10 = R("n10"), b11 = R("n11"), b12 = R("n12"), b13 = R("n13");
+  const in2a = b2.t + b2.h * 0.3, in2b = b2.t + b2.h * 0.7;
+  wire([[b1b.r, b1b.cy], [484, b1b.cy], [484, in2b], [b2.l, in2b]]);
+  wire([[b1a.r, b1a.cy], [484, b1a.cy], [484, in2a], [b2.l, in2a]], { dashed: false });
+  wire([[b0.r, b0.cy], [748, b0.cy], [748, b3.cy], [b3.l, b3.cy]]);
+  label("saved settings", 705, b2.b + 2);
+  wire([[b2.r, b2.cy], [b3.cx, b2.cy], [b3.cx, b3.t]]);
+  wire([[b3.cx, b3.b], [b3.cx, b4.t]]);
+  wire([[b4.cx, b4.b], [b4.cx, b5.t]]);
+  wire([[b5.r, b5.cy], [1038, b5.cy], [1038, b6.cy], [b6.l, b6.cy]]);
+  wire([[b6.cx, b6.b], [b6.cx, b7.t]]);
+  wire([[b7.r, b7.cy], [b8.l, b7.cy]]);
+  wire([[b8.cx, b8.t], [b8.cx, b9.b]]);
+  wire([[b9.r, b11.cy], [b11.l, b11.cy]]);
+  const down = b9.b - 30;
+  wire([[b9.r, down], [1534, down], [1534, b12.cy], [b12.l, b12.cy]]);
+  wire([[1534, b10.cy], [b10.l, b10.cy]], { dot: false });
+  wire([[b11.cx, b11.t], [b11.cx, b13.b]]);
+  label("opens brief", b11.cx - 40, (b11.t + b13.b) / 2 + 40);
+  const in13 = b13.t + b13.h * 0.35;
+  wire([[b12.r, b12.cy], [1862, b12.cy], [1862, in13], [b13.r, in13]]);
+  label("Monday email", 1873, 650, "vlabel", "#2f5d50");
+  const out13 = b13.b - 14;
+  wire([[b13.r, out13], [1885, out13], [1885, b10.cy], [b10.r, b10.cy]], { color: "#c9821a" });
+  label("— feedback", 1897, 420, "vlabel", "#c9821a");
+}
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(draw);
+</script>
+</body>
+</html>
